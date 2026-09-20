@@ -36,7 +36,6 @@
             display: flex;
             justify-content: center;
             align-items: flex-start;
-            /* 상단 Safe Area(노치, 상태바) 적용으로 잘림 방지 */
             padding-top: calc(env(safe-area-inset-top) + 20px);
             padding-bottom: calc(env(safe-area-inset-bottom) + 100px);
             padding-left: 16px;
@@ -129,14 +128,12 @@
         .recent-title { font-size: 14px; font-weight: 600; color: #1d1d1f; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .recent-artist { font-size: 12px; color: #86868b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
 
-        /* 상단 타이틀 영역 패딩 가공으로 잘림 완벽 방지 */
         .header { text-align: center; margin-bottom: 8px; padding-top: 4px; }
         .header h1 { font-size: 26px; font-weight: 800; color: #1d1d1f; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .header p { font-size: 13.5px; color: #86868b; margin-top: 4px; }
 
         .section-title { font-size: 12.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #86868b; margin-bottom: 10px; }
         
-        /* 6개 카드가 잘 노출되도록 그리드 조정 */
         .mood-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
         .mood-card {
             position: relative; height: 86px; border-radius: 18px; padding: 12px;
@@ -201,7 +198,6 @@
 
         @media (max-width: 766px) {
             body { 
-                /* 모바일 노치 및 Dynamic Island 고려한 상단 여백 추가 */
                 padding-top: calc(env(safe-area-inset-top) + 16px);
                 padding-bottom: calc(90px + env(safe-area-inset-bottom));
                 padding-left: 12px;
@@ -357,7 +353,6 @@
         let favorites = safeGet('my_music_favs', []);
         let recentPlayed = safeGet('my_music_recent', []);
 
-        // 기본 커버 아트 및 플레이스홀더 렌더링 헬퍼
         function renderArtwork(coverUrl, size = 56) {
             if (coverUrl) {
                 return `<img src="${coverUrl}" style="width:${size}px; height:${size}px; border-radius:${Math.round(size*0.28)}px; object-fit:cover;" alt="album art" />`;
@@ -365,7 +360,6 @@
             return `<div style="width:${size}px; height:${size}px; border-radius:${Math.round(size*0.28)}px; background:#f2f2f7; display:flex; align-items:center; justify-content:center; font-size:${Math.round(size*0.5)}px;">🎵</div>`;
         }
 
-        // 10,000곡 이상의 데이터베이스 생성을 위한 확장 알고리즘
         function buildMassiveDatabase() {
             const baseArtists = ["IU", "BTS", "NewJeans", "aespa", "IVE", "SEVENTEEN", "Taylor Swift", "Bruno Mars", "The Weeknd", "Billie Eilish", "Ed Sheeran", "Coldplay", "Drake", "Post Malone", "Ariana Grande", "Dua Lipa", "Kendrick Lamar", "SZA", "Lauv", "YOASOBI", "RADWIMPS", "Hans Zimmer", "Joe Hisaishi", "Imagine Dragons", "Maroon 5", "AKMU", "ZICO", "QWER", "DAY6", "LE SSERAFIM"];
             const baseAdjectives = ["Melodic", "Ethereal", "Electric", "Midnight", "Acoustic", "Infinite", "Golden", "Silent", "Vibrant", "Chilling", "Cosmic", "Rhythmic", "Deep", "Pure", "Luminous", "Emotional", "Velvet", "Urban", "Crystal", "Radiant"];
@@ -374,7 +368,6 @@
             const categories = ['chill', 'focus', 'energy', 'night'];
             const dataObj = { kr100: [], us100: [], chill: [], focus: [], energy: [], night: [] };
 
-            let count = 0;
             for (let i = 0; i < 10200; i++) {
                 const category = categories[i % categories.length];
                 const artist = baseArtists[i % baseArtists.length];
@@ -393,23 +386,32 @@
 
         const musicData = buildMassiveDatabase();
 
-        // 실시간 Apple Music API 연동 함수 (한국 TOP 100 / 미국 TOP 100)
+        // CORS 우회가 적용된 실시간 Apple Music API 연동 함수
         async function fetchRealtimeTop100(countryCode, targetMoodKey) {
+            const targetUrl = `https://rss.applemarketingtools.com/api/v2/${countryCode}/music/most-played/100/songs.json`;
+            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+
             try {
-                const response = await fetch(`https://rss.applemarketingtools.com/api/v2/${countryCode}/music/most-played/100/songs.json`);
-                if (!response.ok) throw new Error('Network response was not ok');
-                const data = await response.json();
-                const songs = data.feed.results.map(item => ({
-                    title: item.name,
-                    artist: item.artistName,
-                    coverArt: item.artworkUrl100.replace('100x100bb', '300x300bb'),
-                    desc: `실시간 ${countryCode.toUpperCase()} 인기 차트 상위권 히트곡.`
-                }));
-                if (songs && songs.length > 0) {
-                    musicData[targetMoodKey] = songs;
+                const response = await fetch(proxyUrl);
+                if (!response.ok) throw new Error('네트워크 응답 실패');
+                
+                const wrapperData = await response.json();
+                const data = JSON.parse(wrapperData.contents);
+                
+                if (data && data.feed && data.feed.results) {
+                    const songs = data.feed.results.map(item => ({
+                        title: item.name,
+                        artist: item.artistName,
+                        coverArt: item.artworkUrl100 ? item.artworkUrl100.replace('100x100bb', '300x300bb') : '',
+                        desc: `실시간 ${countryCode.toUpperCase()} 인기 차트 상위권 히트곡.`
+                    }));
+                    
+                    if (songs.length > 0) {
+                        musicData[targetMoodKey] = songs;
+                    }
                 }
             } catch (err) {
-                console.warn(`실시간 차트 연동 실패 (${countryCode}):`, err);
+                console.warn(`실시간 차트 연동 실패 (${countryCode}), 백업 데이터 사용:`, err);
             }
         }
 
@@ -418,8 +420,9 @@
                 fetchRealtimeTop100('kr', 'kr100'),
                 fetchRealtimeTop100('us', 'us100')
             ]);
+
             if (currentMood === 'kr100' || currentMood === 'us100') {
-                if (musicData[currentMood].length > 0) {
+                if (musicData[currentMood] && musicData[currentMood].length > 0) {
                     selectSong(musicData[currentMood][0]);
                 }
             }
@@ -453,7 +456,6 @@
             });
         });
 
-        // 보관함 기반 취향 가중치 추천 알고리즘
         function getPersonalizedSong(playlist) {
             let candidates = playlist;
             if (currentSong) {
@@ -659,7 +661,6 @@
             renderRecent();
             renderFavorites();
             
-            // 실시간 차트 로드 진행
             await initRealtimeCharts();
 
             const isMobileOrTablet = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (window.innerWidth <= 1180);
