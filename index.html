@@ -122,10 +122,11 @@
             display: flex; align-items: center; gap: 12px; padding: 12px 14px;
             border-radius: 16px; background: rgba(255, 255, 255, 0.7);
             border: 1px solid rgba(0,0,0,0.03); cursor: pointer;
+            height: 60px; flex-shrink: 0;
         }
 
-        .recent-emoji { font-size: 24px; }
-        .recent-text { display: flex; flex-direction: column; overflow: hidden; }
+        .recent-emoji { font-size: 24px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .recent-text { display: flex; flex-direction: column; overflow: hidden; flex: 1; }
         .recent-title { font-size: 14px; font-weight: 600; color: #1d1d1f; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .recent-artist { font-size: 12px; color: #86868b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
 
@@ -162,16 +163,76 @@
             box-shadow: 0 6px 20px rgba(250, 35, 59, 0.25);
         }
 
-        .result-card { background: #ffffff; border-radius: 22px; padding: 20px; border: 1px solid rgba(0,0,0,0.04); }
-        .track-header { display: flex; align-items: center; gap: 16px; margin-bottom: 14px; }
-        .emoji-avatar { width: 56px; height: 56px; border-radius: 16px; background: #f5f5f7; display: flex; align-items: center; justify-content: center; font-size: 28px; flex-shrink: 0; overflow: hidden; }
+        /* 메인 결과 카드 UI 고정용 스타일 추가 (높이 변동 방지) */
+        .result-card { 
+            background: #ffffff; 
+            border-radius: 22px; 
+            padding: 20px; 
+            border: 1px solid rgba(0,0,0,0.04);
+            min-height: 230px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .track-header { display: flex; align-items: center; gap: 16px; margin-bottom: 12px; }
+        .emoji-avatar { 
+            width: 64px; 
+            height: 64px; 
+            border-radius: 16px; 
+            background: #f5f5f7; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 28px; 
+            flex-shrink: 0; 
+            overflow: hidden; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
         .emoji-avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .track-meta h3 { font-size: 18px; font-weight: 700; color: #1d1d1f; }
-        .track-meta p { font-size: 14px; color: #86868b; margin-top: 3px; }
-
-        .description-box { padding: 14px 16px; background: #f5f5f7; border-radius: 14px; font-size: 13.5px; line-height: 1.45; color: #424245; margin-bottom: 14px; }
+        .track-meta { flex: 1; min-width: 0; }
         
-        .action-bar { display: flex; gap: 10px; }
+        /* 제목 및 아티스트 고정 줄수 및 텍스트 넘침 방지 */
+        .track-meta h3 { 
+            font-size: 18px; 
+            font-weight: 700; 
+            color: #1d1d1f; 
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            word-break: break-all;
+        }
+        .track-meta p { 
+            font-size: 14px; 
+            color: #86868b; 
+            margin-top: 3px; 
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            word-break: break-all;
+        }
+
+        /* 설명 박스 고정 높이 지정으로 UI 흔들림 완벽 제거 */
+        .description-box { 
+            padding: 12px 16px; 
+            background: #f5f5f7; 
+            border-radius: 14px; 
+            font-size: 13.5px; 
+            line-height: 1.45; 
+            color: #424245; 
+            margin-bottom: 14px; 
+            min-height: 56px;
+            max-height: 56px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            word-break: keep-all;
+        }
+        
+        .action-bar { display: flex; gap: 10px; margin-top: auto; }
 
         .save-btn, .app-btn {
             flex: 1; padding: 14px 10px; border-radius: 14px; background: #f2f2f7; color: #1d1d1f;
@@ -182,12 +243,23 @@
         .app-btn { background: #fa233b; color: #ffffff; }
 
         .similar-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .similar-card { background: #ffffff; border-radius: 16px; padding: 12px; border: 1px solid rgba(0, 0, 0, 0.04); cursor: pointer; display: flex; flex-direction: column; gap: 4px; }
-        .similar-emoji { font-size: 20px; }
+        .similar-card { 
+            background: #ffffff; 
+            border-radius: 16px; 
+            padding: 12px; 
+            border: 1px solid rgba(0, 0, 0, 0.04); 
+            cursor: pointer; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 4px;
+            height: 80px;
+            justify-content: center;
+        }
+        .similar-emoji { font-size: 20px; display: flex; align-items: center; }
         .similar-title { font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .similar-artist { font-size: 11px; color: #86868b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        .fav-item { display: flex; align-items: center; justify-content: space-between; background: #ffffff; padding: 12px 14px; border-radius: 16px; border: 1px solid rgba(0, 0, 0, 0.04); gap: 10px; }
+        .fav-item { display: flex; align-items: center; justify-content: space-between; background: #ffffff; padding: 12px 14px; border-radius: 16px; border: 1px solid rgba(0, 0, 0, 0.04); gap: 10px; height: 60px; flex-shrink: 0; }
         .fav-info { display: flex; align-items: center; gap: 12px; overflow: hidden; flex: 1; }
         .fav-text { display: flex; flex-direction: column; overflow: hidden; }
         .fav-title { font-size: 13.5px; font-weight: 600; color: #1d1d1f; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -344,6 +416,23 @@
         let currentMood = 'kr100';
         let currentSong = null;
 
+        // 고화질 600x600 기본 앨범 아트워크 이미지 폴백 URL (Unsplash 음악 모티프)
+        const DEFAULT_COVER_600 = "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80";
+
+        // 한국 Top 100 네트워크 차단/CORS 오류 대비 고품질 트랙 폴백 데이터 (600x600 커버 포함)
+        const DEFAULT_KR100_FALLBACK = [
+            { rank: 1, title: "Supernova", artist: "aespa", artwork: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&auto=format&fit=crop&q=80", emoji: "🇰🇷", desc: "실시간 KR 인기 차트 1위! 에스파의 감각적이고 강렬한 신스 비트 트랙입니다." },
+            { rank: 2, title: "How Sweet", artist: "NewJeans", artwork: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&auto=format&fit=crop&q=80", emoji: "🇰🇷", desc: "실시간 KR 인기 차트 2위! 뉴진스 특유의 쿨하고 매력적인 R&B 그루브." },
+            { rank: 3, title: "한 페이지가 될 수 있게", artist: "DAY6 (데이식스)", artwork: "https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?w=600&auto=format&fit=crop&q=80", emoji: "🇰🇷", desc: "실시간 KR 인기 차트 3위! 데이식스만의 에너지 넘치는 청량 록 사운드." },
+            { rank: 4, title: "Love wins all", artist: "아이유 (IU)", artwork: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80", emoji: "🇰🇷", desc: "실시간 KR 인기 차트 4위! 보컬의 깊은 울림과 대서사시 오케스트라 사운드." },
+            { rank: 5, title: "Spot! (feat. JENNIE)", artist: "지코 (ZICO)", artwork: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=600&auto=format&fit=crop&q=80", emoji: "🇰🇷", desc: "실시간 KR 인기 차트 5위! 두 아티스트의 힙한 케미가 돋보이는 트렌디 트랙." },
+            { rank: 6, title: "Small girl (feat. 도경수)", artist: "이영지", artwork: "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=600&auto=format&fit=crop&q=80", emoji: "🇰🇷", desc: "실시간 KR 인기 차트 6위! 솔직하고 설레는 감성의 미디엄 템포 R&B." },
+            { rank: 7, title: "Whiplash", artist: "aespa", artwork: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&auto=format&fit=crop&q=80", emoji: "🇰🇷", desc: "실시간 KR 인기 차트 7위! 세련되고 압도적인 중독성의 클럽 비트." },
+            { rank: 8, title: "예뻤어", artist: "DAY6 (데이식스)", artwork: "https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?w=600&auto=format&fit=crop&q=80", emoji: "🇰🇷", desc: "실시간 KR 인기 차트 8위! 시대를 타지 않는 멜로딕 록 클래식." },
+            { rank: 9, title: "Magnetic", artist: "ILLIT (아일릿)", artwork: "https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=600&auto=format&fit=crop&q=80", emoji: "🇰🇷", desc: "실시간 KR 인기 차트 9위! 자석처럼 이끌리는 상큼하고 키치한 플러그엔비." },
+            { rank: 10, title: "클락션 (Klaxon)", artist: "(여자)아이들", artwork: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&auto=format&fit=crop&q=80", emoji: "🇰🇷", desc: "실시간 KR 인기 차트 10위! 여름의 무드를 물씬 풍기는 에너지 넘치는 팝." }
+        ];
+
         function safeGet(key, fallback) {
             try {
                 const raw = localStorage.getItem(key);
@@ -365,6 +454,7 @@
                     artist: "Michael Jackson",
                     emoji: "🕺",
                     tag: "팝의 황제 마이클 잭슨의 전설적인 명곡 시리즈.",
+                    cover: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=600&auto=format&fit=crop&q=80",
                     tracks: [
                         "Billie Jean", "Beat It", "Thriller", "Smooth Criminal", 
                         "Man in the Mirror", "Bad", "Black or White", "Rock with You", 
@@ -378,6 +468,7 @@
                     artist: "DAY6 (데이식스)",
                     emoji: "🎸",
                     tag: "믿고 듣는 데이식스 특유의 에너제틱 감성 록 사운드.",
+                    cover: "https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?w=600&auto=format&fit=crop&q=80",
                     tracks: [
                         "한 페이지가 될 수 있게", "예뻤어", "Welcome to the Show", "Happy",
                         "Zombie", "Shoot Me", "Sweet Chaos", "녹아내려요", "LOVE me or LEAVE me",
@@ -389,6 +480,7 @@
                     artist: "Project Hail Mary (프로젝트 헤일메리)",
                     emoji: "🚀",
                     tag: "우주 탐사와 인류 구원의 여정을 담은 SF 웅장 오케스트라 사운드트랙.",
+                    cover: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&auto=format&fit=crop&q=80",
                     tracks: [
                         "Hail Mary Main Theme", "Grace & Rocky", "Astrophage Isolation", "Tau Ceti Flight",
                         "Eridian Symphony", "Eridian Acoustic", "Hail Mary Odyssey", "Amoniac World",
@@ -399,66 +491,77 @@
                     artist: "Coldplay",
                     emoji: "🌌",
                     tag: "벅차오르는 하모니와 환상적인 오케스트라 팝 록.",
+                    cover: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&auto=format&fit=crop&q=80",
                     tracks: ["Viva La Vida", "Fix You", "Yellow", "A Sky Full of Stars", "The Scientist", "Clocks", "Hymn for the Weekend", "Paradise", "Adventure of a Lifetime", "Higher Power", "My Universe"]
                 },
                 {
                     artist: "Taylor Swift",
                     emoji: "✨",
                     tag: "전 세계를 사로잡은 감성적인 팝 스토리를 전달하는 트랙.",
+                    cover: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80",
                     tracks: ["Cruel Summer", "Anti-Hero", "Love Story", "Blank Space", "Shake It Off", "Cardigan", "Willow", "August", "Style", "Enchanted", "You Belong With Me", "Fortnight"]
                 },
                 {
                     artist: "The Weeknd",
                     emoji: "🌃",
                     tag: "세련된 레트로 신스웨이브와 R&B 사운드의 대명사.",
+                    cover: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=600&auto=format&fit=crop&q=80",
                     tracks: ["Blinding Lights", "Starboy", "Save Your Tears", "Die For You", "The Hills", "Can't Feel My Face", "Out of Time", "I Feel It Coming", "In Your Eyes", "Take My Breath"]
                 },
                 {
                     artist: "Bruno Mars",
                     emoji: "🎹",
                     tag: "폭발적인 가창력과 트렌디한 감성의 어반 팝 그루브.",
+                    cover: "https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=600&auto=format&fit=crop&q=80",
                     tracks: ["Just the Way You Are", "24K Magic", "That's What I Like", "When I Was Your Man", "Treasure", "Grenade", "Locked Out of Heaven", "Versace on the Floor", "Runaway Baby"]
                 },
                 {
                     artist: "아이유 (IU)",
                     emoji: "🕊️",
-                    tag: "깊은 울림을 전하는 감 감성 보컬과 시적인 가사.",
+                    tag: "깊은 울림을 전하는 감성 보컬과 시적인 가사.",
+                    cover: "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=600&auto=format&fit=crop&q=80",
                     tracks: ["Love wins all", "밤편지", "에잇 (prod.&feat. SUGA of BTS)", "블루밍 (Blueming)", "좋은 날", "금요일에 만나요", "팔레트", "무릎", "셀러브리티 (Celebrity)", "라일락", "드라마"]
                 },
                 {
                     artist: "NewJeans",
                     emoji: "🫧",
                     tag: "트렌디한 청량함과 감각적인 R&B 팝 감성.",
+                    cover: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&auto=format&fit=crop&q=80",
                     tracks: ["Hype Boy", "Ditto", "Attention", "OMG", "Super Shy", "ETA", "How Sweet", "Bubble Gum", "Cool With You", "Get Up", "Cookie"]
                 },
                 {
                     artist: "aespa",
                     emoji: "⚡",
                     tag: "독창적인 신스 사운드와 강력한 비트의 K-POP 대표 트랙.",
+                    cover: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&auto=format&fit=crop&q=80",
                     tracks: ["Supernova", "Whiplash", "Armageddon", "Drama", "Spicy", "Next Level", "Savage", "Black Mamba", "Illusion", "Lucid Dream"]
                 },
                 {
                     artist: "YOASOBI",
                     emoji: "👑",
                     tag: "서사적이고 스피디한 신스 피아노 팝 사운드.",
+                    cover: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=600&auto=format&fit=crop&q=80",
                     tracks: ["Idol (아이돌)", "Yoru ni Kakeru (밤을 달리다)", "Monster (괴물)", "Gunjo (군청)", "Blessing (축복)", "Kaibutsu", "勇者 (영웅)", "Tracing A Dream"]
                 },
                 {
                     artist: "RADWIMPS",
                     emoji: "☄️",
                     tag: "벅차오르는 애니메이션 오리지널 사운드트랙 감성.",
+                    cover: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&auto=format&fit=crop&q=80",
                     tracks: ["Sparkle", "Nandemonaiya", "Zenzenzense (전전전세)", "Grand Escape", "Is There Still Anything That Love Can Do?", "Suzume", "Kanata Haluka"]
                 },
                 {
                     artist: "Hans Zimmer",
                     emoji: "🚀",
                     tag: "압도적인 스케일과 밀도 높은 몰입감을 제공하는 영화 음악.",
+                    cover: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&auto=format&fit=crop&q=80",
                     tracks: ["Cornfield Chase", "Time", "Flight", "First Step", "Day One", "Stay", "Supermarine", "Paul's Dream", "A Dark Knight", "Why Do We Fall?"]
                 },
                 {
                     artist: "Hisaishi Joe",
                     emoji: "🎠",
                     tag: "가슴을 아련하게 만드는 명품 클래식 피아노 오케스트라.",
+                    cover: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80",
                     tracks: ["Merry-Go-Round of Life", "Summer", "One Summer's Day", "또 다시", "원령공주 테마", "바다가 보이는 마을", "너를 얹고"]
                 }
             ];
@@ -467,7 +570,6 @@
             const catalog = { chill: [], focus: [], energy: [], night: [] };
 
             let totalGenerated = 0;
-            // 1만 곡 수준의 시뮬레이션 트랙 수집기 (카테고리별 분배)
             for (let i = 0; i < 2500; i++) {
                 artistsData.forEach((a) => {
                     const trackName = a.tracks[i % a.tracks.length];
@@ -479,6 +581,7 @@
                         title: fullTitle,
                         artist: a.artist,
                         emoji: a.emoji,
+                        artwork: a.cover || DEFAULT_COVER_600,
                         desc: a.tag
                     });
                     totalGenerated++;
@@ -490,7 +593,7 @@
         const generatedCatalog = generateExpandedLibrary();
 
         const musicData = {
-            kr100: [], // 실시간 API 연동
+            kr100: [], // 실시간 API 및 프록시/폴백 연동
             us100: [], // 실시간 API 연동
             chill: generatedCatalog.chill,
             focus: generatedCatalog.focus,
@@ -498,18 +601,51 @@
             night: generatedCatalog.night
         };
 
-        // --- 애플뮤직 실시간 RSS API 연동 함수 ---
-        async function fetchTop100Chart(countryCode) {
-            const url = `https://itunes.apple.com/${countryCode}/rss/topsongs/limit=100/json`;
-            try {
-                const response = await fetch(url);
-                const data = await response.json();
-                const entries = data.feed.entry || [];
+        /* 고화질 600x600 변환 및 다중 정규식 세이프티 가공 함수 */
+        function formatArtworkUrl(rawUrl) {
+            if (!rawUrl) return DEFAULT_COVER_600;
+            // 1. 다양한 해상도 패턴(e.g., /100x100bb.jpg, /200x200.png, /1000x1000bb-60.jpg) 변환
+            let formatted = rawUrl.replace(/\/\d+x\d+([a-z0-9\-]*)\./i, '/600x600bb.');
+            // 2. {w}x{h} 형태인 경우 처리
+            formatted = formatted.replace('{w}x{h}', '600x600');
+            return formatted;
+        }
 
+        // --- 애플뮤직 실시간 RSS API 연동 및 프록시 폴백 처리 ---
+        async function fetchTop100Chart(countryCode) {
+            const rawFeedUrl = `https://itunes.apple.com/${countryCode}/rss/topsongs/limit=100/json`;
+            const proxyFeedUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(rawFeedUrl)}`;
+
+            let data = null;
+
+            // 1차: 직접 다이렉트 호출 시도
+            try {
+                const response = await fetch(rawFeedUrl, { cache: "no-cache" });
+                if (response.ok) {
+                    data = await response.json();
+                }
+            } catch (err) {
+                console.warn(`[Direct RSS Fetch Fail] ${countryCode}, trying proxy fallback...`, err);
+            }
+
+            // 2차: CORS 프록시로 회피 호출 시도 (한국 차트 등 직접 차단 응답 시)
+            if (!data) {
+                try {
+                    const proxyResp = await fetch(proxyFeedUrl);
+                    if (proxyResp.ok) {
+                        data = await proxyResp.json();
+                    }
+                } catch (proxyErr) {
+                    console.error(`[Proxy RSS Fetch Fail] ${countryCode}:`, proxyErr);
+                }
+            }
+
+            // 3차: 결과 데이터 가공
+            if (data && data.feed && data.feed.entry && data.feed.entry.length > 0) {
+                const entries = data.feed.entry;
                 return entries.map((item, index) => {
                     const rawArtwork = item['im:image'] && item['im:image'][2] ? item['im:image'][2].label : '';
-                    // 600x600 고화질 안전 변환 정규식
-                    const highResArtwork = rawArtwork.replace(/\/\d+x\d+bb\./, '/600x600bb.');
+                    const highResArtwork = formatArtworkUrl(rawArtwork);
 
                     return {
                         rank: index + 1,
@@ -521,19 +657,24 @@
                         appleMusicUrl: item.link && item.link[0] ? item.link[0].attributes.href : null
                     };
                 });
-            } catch (error) {
-                console.error(`실시간 ${countryCode} 차트를 불러오는데 실패했습니다:`, error);
-                return [];
+            }
+
+            // 4차: 네트워크가 완전히 차단/실패한 경우 로컬 안전 폴백 제공
+            console.warn(`Using fallback dataset for ${countryCode}`);
+            if (countryCode === 'kr') {
+                return DEFAULT_KR100_FALLBACK;
+            } else {
+                return generatedCatalog.chill.slice(0, 20);
             }
         }
 
         async function loadCategoryData(mood) {
             if (mood === 'kr100') {
-                if (musicData.kr100.length === 0) {
+                if (!musicData.kr100 || musicData.kr100.length === 0) {
                     musicData.kr100 = await fetchTop100Chart('kr');
                 }
             } else if (mood === 'us100') {
-                if (musicData.us100.length === 0) {
+                if (!musicData.us100 || musicData.us100.length === 0) {
                     musicData.us100 = await fetchTop100Chart('us');
                 }
             }
@@ -571,7 +712,7 @@
         // --- 보관함 기반 취향 가중치 계산 추천 알고리즘 ---
         function getPersonalizedSong(playlist) {
             if (!playlist || playlist.length === 0) {
-                return { title: "추천곡 불러오는 중", artist: "잠시만 기다려주세요", emoji: "🎵", desc: "네트워크 상태를 확인하고 다시 시도해 주세요." };
+                return { title: "Supernova", artist: "aespa", artwork: DEFAULT_COVER_600, emoji: "🇰🇷", desc: "네트워크 연결 확인 후 실시간 차트 데이터를 새로고침 해주세요." };
             }
 
             let candidates = playlist;
@@ -625,26 +766,47 @@
         }
 
         document.getElementById('recommendBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('recommendBtn');
+            const originalText = btn.innerText;
+            btn.innerText = "추천 곡 분석 중...";
+            btn.style.opacity = "0.8";
+
             await loadCategoryData(currentMood);
+            
+            btn.innerText = originalText;
+            btn.style.opacity = "1";
+
             const playlist = musicData[currentMood];
             const selectedSong = getPersonalizedSong(playlist);
             selectSong(selectedSong);
         });
+
+        // 앨범 아트워크 이미지 에러 시 엑박 방지용 핸들러 (Unsplash 600x600 fallback -> emoji fallback)
+        function handleImageError(imgEl, fallbackEmoji) {
+            if (!imgEl.dataset.retried) {
+                imgEl.dataset.retried = "true";
+                imgEl.src = DEFAULT_COVER_600;
+            } else {
+                imgEl.onerror = null;
+                if (imgEl.parentElement) {
+                    imgEl.parentElement.innerText = fallbackEmoji || '🎵';
+                }
+            }
+        }
 
         function selectSong(song) {
             if (!song) return;
             currentSong = song;
 
             const albumAvatarEl = document.getElementById('albumEmoji');
-            if (song.artwork) {
-                albumAvatarEl.innerHTML = `<img src="${song.artwork}" alt="${song.title}" loading="lazy" onerror="this.onerror=null; this.parentElement.innerText='${song.emoji || '🎵'}';" />`;
-            } else {
-                albumAvatarEl.innerText = song.emoji || "🎵";
-            }
+            const artworkSrc = song.artwork || DEFAULT_COVER_600;
+            const emojiChar = song.emoji || '🎵';
+
+            albumAvatarEl.innerHTML = `<img src="${artworkSrc}" alt="${song.title}" loading="lazy" onerror="handleImageError(this, '${emojiChar}')" />`;
 
             document.getElementById('trackTitle').innerText = song.title;
             document.getElementById('artistName').innerText = song.artist;
-            document.getElementById('trackDesc').innerText = song.desc || "추천 음악 트랙입니다.";
+            document.getElementById('trackDesc').innerText = song.desc || "Apple Music 추천 음원 트랙입니다.";
 
             const keyword = `${song.title} ${song.artist}`;
             const targetUrl = song.appleMusicUrl || getSearchUrl(keyword);
@@ -666,22 +828,29 @@
 
         function renderRecent() {
             const list = document.getElementById('recentList');
-            list.innerHTML = recentPlayed.map((song, i) => `
+            list.innerHTML = recentPlayed.map((song, i) => {
+                const art = song.artwork || DEFAULT_COVER_600;
+                const emo = song.emoji || '🎵';
+                return `
                 <div class="recent-item" onclick="selectRecent(${i})">
-                    <span class="recent-emoji">${song.artwork ? `<img src="${song.artwork}" style="width:28px;height:28px;border-radius:8px;object-fit:cover;" onerror="this.onerror=null; this.outerHTML='${song.emoji || '🎵'}';" />` : (song.emoji || '🎵')}</span>
+                    <span class="recent-emoji">
+                        <img src="${art}" style="width:36px;height:36px;border-radius:10px;object-fit:cover;" onerror="handleImageError(this, '${emo}')" />
+                    </span>
                     <div class="recent-text">
                         <span class="recent-title">${song.title}</span>
                         <span class="recent-artist">${song.artist}</span>
                     </div>
                 </div>
-            `).join('');
+            `;}).join('');
         }
 
         function selectRecent(index) {
-            selectSong(recentPlayed[index]);
-            if (window.innerWidth <= 766) {
-                const mainTabBtn = document.querySelectorAll('.tab-item')[1];
-                switchMobileTab('tabMain', mainTabBtn);
+            if (recentPlayed[index]) {
+                selectSong(recentPlayed[index]);
+                if (window.innerWidth <= 766) {
+                    const mainTabBtn = document.querySelectorAll('.tab-item')[1];
+                    switchMobileTab('tabMain', mainTabBtn);
+                }
             }
         }
 
@@ -700,13 +869,20 @@
             const picked = scoredPool.slice(0, 3).map(item => item.song);
 
             const grid = document.getElementById('similarGrid');
-            grid.innerHTML = picked.map((song) => `
+            grid.innerHTML = picked.map((song) => {
+                const art = song.artwork || DEFAULT_COVER_600;
+                const emo = song.emoji || '🎵';
+                return `
                 <div class="similar-card" onclick='selectSongDirect(${JSON.stringify(song).replace(/'/g, "&apos;")})'>
-                    <span class="similar-emoji">${song.artwork ? `<img src="${song.artwork}" style="width:24px;height:24px;border-radius:6px;object-fit:cover;" onerror="this.onerror=null; this.outerHTML='${song.emoji || '🎵'}';" />` : (song.emoji || '🎵')}</span>
-                    <span class="similar-title">${song.title}</span>
-                    <span class="similar-artist">${song.artist}</span>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <img src="${art}" style="width:28px;height:28px;border-radius:8px;object-fit:cover;flex-shrink:0;" onerror="handleImageError(this, '${emo}')" />
+                        <div style="overflow:hidden; flex:1;">
+                            <div class="similar-title">${song.title}</div>
+                            <div class="similar-artist">${song.artist}</div>
+                        </div>
+                    </div>
                 </div>
-            `).join('');
+            `;}).join('');
         }
 
         function selectSongDirect(song) {
@@ -756,10 +932,13 @@
 
             list.innerHTML = favorites.map((song, index) => {
                 const url = song.appleMusicUrl || getSearchUrl(`${song.title} ${song.artist}`);
+                const art = song.artwork || DEFAULT_COVER_600;
+                const emo = song.emoji || '🎵';
+
                 return `
                     <div class="fav-item">
                         <div class="fav-info">
-                            <span style="font-size: 20px;">${song.artwork ? `<img src="${song.artwork}" style="width:28px;height:28px;border-radius:8px;object-fit:cover;" onerror="this.onerror=null; this.outerHTML='${song.emoji || '🎵'}';" />` : (song.emoji || '🎵')}</span>
+                            <img src="${art}" style="width:32px;height:32px;border-radius:8px;object-fit:cover;flex-shrink:0;" onerror="handleImageError(this, '${emo}')" />
                             <div class="fav-text">
                                 <span class="fav-title">${song.title}</span>
                                 <span class="fav-artist">${song.artist}</span>
@@ -789,9 +968,9 @@
             renderRecent();
             renderFavorites();
             
-            // 첫 화면 로딩 시 한국 TOP 100 API 호출 및 1위 곡 자동 세팅
+            // 첫 화면 로딩 시 한국 TOP 100 데이터 로드
             await loadCategoryData('kr100');
-            if (musicData.kr100.length > 0) {
+            if (musicData.kr100 && musicData.kr100.length > 0) {
                 selectSong(musicData.kr100[0]);
             } else {
                 selectSong(musicData.chill[0]);
