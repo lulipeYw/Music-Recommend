@@ -1,990 +1,367 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MusicDiscovery</title>
-
-    <!-- 홈 화면 추가 시 기본 이름 및 PWA 설정 -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="MusicDiscovery">
-    <meta name="application-name" content="MusicDiscovery">
-    <link rel="apple-touch-icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Apple_Music_icon.svg/512px-Apple_Music_icon.svg.png">
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
-            -webkit-font-smoothing: antialiased;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        html, body {
-            width: 100%;
-            overflow-x: hidden;
-            background: #f5f5f7;
-            color: #1d1d1f;
-        }
-
-        body {
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            /* 상단 Safe Area(노치, 상태바) 적용으로 잘림 방지 */
-            padding-top: calc(env(safe-area-inset-top) + 20px);
-            padding-bottom: calc(env(safe-area-inset-bottom) + 100px);
-            padding-left: 16px;
-            padding-right: 16px;
-        }
-
-        .install-banner-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.35);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            z-index: 100000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .install-banner-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 255, 255, 0.8);
-            width: 100%;
-            max-width: 480px;
-            border-radius: 28px;
-            padding: 28px 24px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
-            text-align: center;
-        }
-
-        .banner-icon {
-            width: 64px; height: 64px;
-            background: linear-gradient(135deg, #fa233b, #ff5e62);
-            border-radius: 18px;
-            display: flex; align-items: center; justify-content: center;
-            color: #ffffff; font-size: 32px;
-            margin: 0 auto 16px auto;
-        }
-
-        .banner-title { font-size: 20px; font-weight: 700; color: #1d1d1f; margin-bottom: 8px; }
-        .banner-desc { font-size: 14.5px; color: #515154; line-height: 1.5; margin-bottom: 20px; }
-
-        .banner-steps {
-            background: #f5f5f7; border-radius: 16px; padding: 14px 16px;
-            font-size: 13.5px; color: #1d1d1f; text-align: left; margin-bottom: 20px;
-            display: flex; flex-direction: column; gap: 8px;
-        }
-        .banner-steps div { display: flex; align-items: center; gap: 10px; }
-        .banner-steps i { color: #fa233b; font-size: 16px; width: 20px; text-align: center; }
-
-        .banner-close-btn {
-            width: 100%; padding: 14px; border-radius: 16px;
-            background: #1d1d1f; color: #ffffff; border: none;
-            font-size: 15px; font-weight: 600; cursor: pointer;
-        }
-
-        .app-layout {
-            display: flex; gap: 24px; max-width: 1400px; width: 100%; align-items: stretch;
-            margin: 0 auto;
-        }
-
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.88);
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
-            border-radius: 28px;
-            border: 1px solid rgba(255, 255, 255, 0.9);
-            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.05);
-            padding: 24px;
-        }
-
-        .recent-panel { width: 320px; flex-shrink: 0; display: flex; flex-direction: column; max-height: 800px; }
-        .main-panel { flex: 1; display: flex; flex-direction: column; gap: 20px; }
-        .right-panel { width: 340px; flex-shrink: 0; max-height: 800px; display: flex; flex-direction: column; }
-
-        .panel-title { font-size: 16px; font-weight: 700; color: #1d1d1f; display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
-
-        .recent-list, .favorites-list { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; flex: 1; }
-
-        .recent-item {
-            display: flex; align-items: center; gap: 12px; padding: 12px 14px;
-            border-radius: 16px; background: rgba(255, 255, 255, 0.7);
-            border: 1px solid rgba(0,0,0,0.03); cursor: pointer;
-            height: 60px; flex-shrink: 0;
-        }
-
-        .recent-emoji { font-size: 24px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .recent-text { display: flex; flex-direction: column; overflow: hidden; flex: 1; }
-        .recent-title { font-size: 14px; font-weight: 600; color: #1d1d1f; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .recent-artist { font-size: 12px; color: #86868b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
-
-        /* 상단 타이틀 영역 패딩 가공으로 잘림 완벽 방지 */
-        .header { text-align: center; margin-bottom: 8px; padding-top: 4px; }
-        .header h1 { font-size: 26px; font-weight: 800; color: #1d1d1f; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .header p { font-size: 13.5px; color: #86868b; margin-top: 4px; }
-
-        .section-title { font-size: 12.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #86868b; margin-bottom: 10px; }
-        
-        /* 6개 카드가 잘 노출되도록 그리드 조정 */
-        .mood-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .mood-card {
-            position: relative; height: 86px; border-radius: 18px; padding: 12px;
-            display: flex; flex-direction: column; justify-content: space-between;
-            color: #ffffff; font-weight: 700; cursor: pointer; border: none;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06); transition: transform 0.15s ease;
-        }
-        .mood-card:active { transform: scale(0.97); }
-        .mood-card.active { outline: 3px solid #1d1d1f; }
-        .mood-title { font-size: 13px; z-index: 1; word-break: keep-all; line-height: 1.2; }
-        .mood-icon { font-size: 20px; z-index: 1; align-self: flex-end; }
-
-        .bg-kr100 { background: linear-gradient(135deg, #ff2a54, #ff6040); }
-        .bg-us100 { background: linear-gradient(135deg, #2563eb, #3b82f6); }
-        .bg-chill { background: linear-gradient(135deg, #34c759, #30d158); }
-        .bg-focus { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
-        .bg-energy { background: linear-gradient(135deg, #ff9500, #ff3b30); }
-        .bg-night { background: linear-gradient(135deg, #af52de, #5856d6); }
-
-        .recommend-btn {
-            width: 100%; padding: 16px; border-radius: 18px; border: none;
-            background: #fa233b; color: white; font-size: 16px; font-weight: 700; cursor: pointer;
-            box-shadow: 0 6px 20px rgba(250, 35, 59, 0.25);
-        }
-
-        /* 메인 결과 카드 UI 고정용 스타일 추가 (높이 변동 방지) */
-        .result-card { 
-            background: #ffffff; 
-            border-radius: 22px; 
-            padding: 20px; 
-            border: 1px solid rgba(0,0,0,0.04);
-            min-height: 230px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-        .track-header { display: flex; align-items: center; gap: 16px; margin-bottom: 12px; }
-        .emoji-avatar { 
-            width: 64px; 
-            height: 64px; 
-            border-radius: 16px; 
-            background: #f5f5f7; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-size: 28px; 
-            flex-shrink: 0; 
-            overflow: hidden; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        }
-        .emoji-avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .track-meta { flex: 1; min-width: 0; }
-        
-        /* 제목 및 아티스트 고정 줄수 및 텍스트 넘침 방지 */
-        .track-meta h3 { 
-            font-size: 18px; 
-            font-weight: 700; 
-            color: #1d1d1f; 
-            display: -webkit-box;
-            -webkit-line-clamp: 1;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            word-break: break-all;
-        }
-        .track-meta p { 
-            font-size: 14px; 
-            color: #86868b; 
-            margin-top: 3px; 
-            display: -webkit-box;
-            -webkit-line-clamp: 1;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            word-break: break-all;
-        }
-
-        /* 설명 박스 고정 높이 지정으로 UI 흔들림 완벽 제거 */
-        .description-box { 
-            padding: 12px 16px; 
-            background: #f5f5f7; 
-            border-radius: 14px; 
-            font-size: 13.5px; 
-            line-height: 1.45; 
-            color: #424245; 
-            margin-bottom: 14px; 
-            min-height: 56px;
-            max-height: 56px;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            word-break: keep-all;
-        }
-        
-        .action-bar { display: flex; gap: 10px; margin-top: auto; }
-
-        .save-btn, .app-btn {
-            flex: 1; padding: 14px 10px; border-radius: 14px; background: #f2f2f7; color: #1d1d1f;
-            border: 1px solid rgba(0, 0, 0, 0.04); font-size: 13.5px; font-weight: 600;
-            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none;
-            white-space: nowrap;
-        }
-        .app-btn { background: #fa233b; color: #ffffff; }
-
-        .similar-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .similar-card { 
-            background: #ffffff; 
-            border-radius: 16px; 
-            padding: 12px; 
-            border: 1px solid rgba(0, 0, 0, 0.04); 
-            cursor: pointer; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 4px;
-            height: 80px;
-            justify-content: center;
-        }
-        .similar-emoji { font-size: 20px; display: flex; align-items: center; }
-        .similar-title { font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .similar-artist { font-size: 11px; color: #86868b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-        .fav-item { display: flex; align-items: center; justify-content: space-between; background: #ffffff; padding: 12px 14px; border-radius: 16px; border: 1px solid rgba(0, 0, 0, 0.04); gap: 10px; height: 60px; flex-shrink: 0; }
-        .fav-info { display: flex; align-items: center; gap: 12px; overflow: hidden; flex: 1; }
-        .fav-text { display: flex; flex-direction: column; overflow: hidden; }
-        .fav-title { font-size: 13.5px; font-weight: 600; color: #1d1d1f; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .fav-artist { color: #86868b; font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-        .fav-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
-        .fav-listen { background: #f2f2f7; border: none; color: #1d1d1f; padding: 7px 12px; border-radius: 10px; cursor: pointer; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; text-decoration: none; }
-        .fav-listen i { font-size: 11px; color: #fa233b; }
-        .fav-del-icon { background: transparent; border: none; color: #a1a1a6; padding: 6px 8px; border-radius: 8px; cursor: pointer; font-size: 13px; }
-
-        .mobile-tab-bar { display: none; }
-
-        @media (max-width: 766px) {
-            body { 
-                /* 모바일 노치 및 Dynamic Island 고려한 상단 여백 추가 */
-                padding-top: calc(env(safe-area-inset-top) + 16px);
-                padding-bottom: calc(90px + env(safe-area-inset-bottom));
-                padding-left: 12px;
-                padding-right: 12px;
-            }
-            .app-layout { display: flex; flex-direction: column; gap: 16px; width: 100%; }
-            .glass-panel { padding: 18px 14px; border-radius: 22px; width: 100%; }
-            .recent-panel, .right-panel { width: 100%; max-height: none; }
-            .tab-content { display: none; }
-            .tab-content.active { display: flex; }
-            .mood-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-            .similar-grid { grid-template-columns: repeat(1, 1fr); }
-            
-            .action-bar { flex-direction: column; gap: 8px; }
-            .save-btn, .app-btn { width: 100%; padding: 15px; font-size: 14px; }
-
-            .mobile-tab-bar {
-                display: flex; position: fixed; bottom: 0; left: 0; right: 0; 
-                height: calc(60px + env(safe-area-inset-bottom));
-                background: rgba(255, 255, 255, 0.94); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-                border-top: 1px solid rgba(0,0,0,0.08); z-index: 9999; justify-content: space-around;
-                align-items: flex-start; padding-top: 6px; padding-bottom: env(safe-area-inset-bottom);
-            }
-            .tab-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #8e8e93; font-size: 11px; font-weight: 600; gap: 3px; background: none; border: none; width: 33.3%; }
-            .tab-item i { font-size: 18px; }
-            .tab-item.active { color: #fa233b; }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MusicDiscovery - 음악 추천 및 차트</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f5f5f7;
+    }
+    .line-clamp-1 {
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .line-clamp-2 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .text-ellipsis-custom {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  </style>
 </head>
-<body>
+<body class="bg-gray-100 text-gray-800 min-h-screen">
 
-    <div class="install-banner-overlay" id="installBanner" style="display: none;">
-        <div class="install-banner-card">
-            <div class="banner-icon"><i class="fa-brands fa-apple"></i></div>
-            <h2 class="banner-title">MusicDiscovery 앱으로 사용</h2>
-            <p class="banner-desc">홈 화면에 추가하여 편리하게 이용해 보세요.</p>
-            <div class="banner-steps">
-                <div><i class="fa-solid fa-arrow-up-from-bracket"></i> 1. 하단/상단의 <b>[공유]</b> 버튼 터치</div>
-                <div><i class="fa-regular fa-square-plus"></i> 2. <b>[홈 화면에 추가]</b> 선택</div>
-            </div>
-            <button type="button" class="banner-close-btn" onclick="closeBanner()">확인했습니다</button>
-        </div>
+  <div class="max-w-6xl mx-auto p-4 md:p-6 grid grid-cols-1 md:grid-cols-4 gap-6">
+    
+    <!-- 좌측: 최근 추천받은 음악 -->
+    <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 md:col-span-1 flex flex-col h-[780px]">
+      <h2 class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+        <i class="fa-regular font-normal fa-clock text-gray-500"></i> 최근 추천받은 음악
+      </h2>
+      <div id="recentList" class="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+        <!-- JS 렌더링 -->
+      </div>
     </div>
 
-    <div class="app-layout">
-        <div class="glass-panel recent-panel tab-content" id="tabRecent">
-            <div class="panel-title"><i class="fa-regular fa-clock"></i> 최근 추천받은 음악</div>
-            <div class="recent-list" id="recentList"></div>
+    <!-- 중앙: 메인 영역 -->
+    <div class="md:col-span-2 space-y-4">
+      <!-- 헤더 -->
+      <div class="text-center py-2">
+        <h1 class="text-2xl font-black tracking-tight text-gray-900 flex items-center justify-center gap-2">
+          <i class="fa-brands fa-apple text-3xl"></i> MusicDiscovery
+        </h1>
+        <p class="text-xs text-gray-400 mt-1">실시간 인기 차트 및 무드별 추천 서비스</p>
+      </div>
+
+      <!-- 카테고리 / 차트 선택 -->
+      <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+        <div class="text-xs text-gray-400 mb-3 font-medium">카테고리 / 차트 선택</div>
+        <div class="grid grid-cols-3 gap-3">
+          <button onclick="selectCategory('kor')" id="btn-kor" class="cat-btn bg-red-500 text-white p-3 rounded-xl font-bold text-xs shadow-md hover:opacity-90 transition relative overflow-hidden h-16 flex flex-col justify-between">
+            <span>한국 TOP 100</span>
+            <i class="fa-solid fa-compact-disc absolute bottom-2 right-2 text-white/30 text-2xl"></i>
+          </button>
+          <button onclick="selectCategory('usa')" id="btn-usa" class="cat-btn bg-blue-600 text-white p-3 rounded-xl font-bold text-xs shadow-md hover:opacity-90 transition relative overflow-hidden h-16 flex flex-col justify-between">
+            <span>미국 TOP 100</span>
+            <i class="fa-solid fa-flag-usa absolute bottom-2 right-2 text-white/30 text-2xl"></i>
+          </button>
+          <button onclick="selectCategory('chill')" id="btn-chill" class="cat-btn bg-emerald-500 text-white p-3 rounded-xl font-bold text-xs hover:opacity-90 transition relative overflow-hidden h-16 flex flex-col justify-between">
+            <span>휴식 / 드라이브</span>
+            <i class="fa-solid fa-leaf absolute bottom-2 right-2 text-white/30 text-2xl"></i>
+          </button>
+          <button onclick="selectCategory('focus')" id="btn-focus" class="cat-btn bg-indigo-600 text-white p-3 rounded-xl font-bold text-xs hover:opacity-90 transition relative overflow-hidden h-16 flex flex-col justify-between">
+            <span>몰입 / OST</span>
+            <i class="fa-solid fa-headphones absolute bottom-2 right-2 text-white/30 text-2xl"></i>
+          </button>
+          <button onclick="selectCategory('energy')" id="btn-energy" class="cat-btn bg-amber-500 text-white p-3 rounded-xl font-bold text-xs hover:opacity-90 transition relative overflow-hidden h-16 flex flex-col justify-between">
+            <span>에너지 / 영화</span>
+            <i class="fa-solid fa-fire absolute bottom-2 right-2 text-white/30 text-2xl"></i>
+          </button>
+          <button onclick="selectCategory('emotional')" id="btn-emotional" class="cat-btn bg-purple-600 text-white p-3 rounded-xl font-bold text-xs hover:opacity-90 transition relative overflow-hidden h-16 flex flex-col justify-between">
+            <span>감성 / 애니</span>
+            <i class="fa-solid fa-moon absolute bottom-2 right-2 text-white/30 text-2xl"></i>
+          </button>
         </div>
 
-        <div class="glass-panel main-panel tab-content active" id="tabMain">
-            <div class="header">
-                <h1><i class="fa-brands fa-apple"></i> MusicDiscovery</h1>
-                <p>실시간 인기 차트 및 무드별 추천 서비스</p>
+        <button onclick="getRandomTrack()" class="w-full mt-4 bg-rose-500 hover:bg-rose-600 text-white font-bold py-3 rounded-xl text-sm transition shadow-md active:scale-98">
+          오늘의 추천곡 받기
+        </button>
+      </div>
+
+      <!-- 메인 추천 카드 (고정 높이 및 앨범 이미지 적용) -->
+      <div id="mainCard" class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between h-[300px]">
+        <div>
+          <div class="flex gap-4 items-center">
+            <img id="mainTrackImg" src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80" class="w-20 h-20 rounded-xl object-cover shadow-md border border-gray-100 flex-shrink-0" alt="Album Art">
+            <div class="flex-1 min-w-0">
+              <h3 id="mainTrackTitle" class="text-base font-bold text-gray-900 line-clamp-1 h-6 leading-6">노래를 선택해 주세요</h3>
+              <p id="mainArtistName" class="text-xs text-gray-500 mt-1 line-clamp-1 h-5 leading-5">아티스트 정보</p>
             </div>
-
-            <div>
-                <div class="section-title">카테고리 / 차트 선택</div>
-                <div class="mood-grid">
-                    <button type="button" class="mood-card bg-kr100 active" data-mood="kr100">
-                        <span class="mood-title">한국 TOP 100</span>
-                        <span class="mood-icon">🇰🇷</span>
-                    </button>
-                    <button type="button" class="mood-card bg-us100" data-mood="us100">
-                        <span class="mood-title">미국 TOP 100</span>
-                        <span class="mood-icon">🇺🇸</span>
-                    </button>
-                    <button type="button" class="mood-card bg-chill" data-mood="chill">
-                        <span class="mood-title">휴식 / 드라이브</span>
-                        <span class="mood-icon">🌿</span>
-                    </button>
-                    <button type="button" class="mood-card bg-focus" data-mood="focus">
-                        <span class="mood-title">몰입 / OST</span>
-                        <span class="mood-icon">🎧</span>
-                    </button>
-                    <button type="button" class="mood-card bg-energy" data-mood="energy">
-                        <span class="mood-title">에너지 / 영화</span>
-                        <span class="mood-icon">🔥</span>
-                    </button>
-                    <button type="button" class="mood-card bg-night" data-mood="night">
-                        <span class="mood-title">감성 / 애니</span>
-                        <span class="mood-icon">🌙</span>
-                    </button>
-                </div>
-            </div>
-
-            <button type="button" class="recommend-btn" id="recommendBtn">오늘의 추천곡 받기</button>
-
-            <div class="result-card" id="resultCard">
-                <div class="track-header">
-                    <div class="emoji-avatar" id="albumEmoji">🎵</div>
-                    <div class="track-meta">
-                        <h3 id="trackTitle">곡 제목</h3>
-                        <p id="artistName">아티스트</p>
-                    </div>
-                </div>
-
-                <div class="description-box" id="trackDesc">
-                    곡 설명 정보입니다.
-                </div>
-
-                <div class="action-bar">
-                    <button type="button" class="save-btn" id="saveBtn">♡ 보관함 저장</button>
-                    <a class="app-btn" id="openAppBtn" href="#" target="_blank"><i class="fa-brands fa-apple"></i> Apple Music 듣기</a>
-                </div>
-            </div>
-
-            <div>
-                <div class="section-title">비슷한 느낌의 추천곡</div>
-                <div class="similar-grid" id="similarGrid"></div>
-            </div>
+          </div>
+          <!-- 설명 박스 높이 고정 -->
+          <div class="mt-4 p-3 bg-gray-50 rounded-xl border border-gray-100 h-16 flex items-center">
+            <p id="mainTrackDesc" class="text-xs text-gray-600 line-clamp-2 leading-relaxed">
+              위 카테고리 버튼을 누르거나 '오늘의 추천곡 받기'를 클릭해 보세요.
+            </p>
+          </div>
         </div>
 
-        <div class="glass-panel right-panel tab-content" id="tabFavs">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                <div class="panel-title" style="margin-bottom:0;"><i class="fa-solid fa-heart" style="color: #fa233b;"></i> 내 보관함</div>
-                <span style="font-size: 13px; color: #fa233b; font-weight: 700;" id="favCount">♥ (0)</span>
-            </div>
-            <div class="favorites-list" id="favList"></div>
+        <div class="flex gap-3 mt-4">
+          <button onclick="toggleFavoriteCurrent()" id="favBtn" class="flex-1 border border-gray-200 text-gray-700 py-2.5 rounded-xl text-xs font-semibold hover:bg-gray-50 transition flex items-center justify-center gap-1.5">
+            <i class="fa-regular fa-heart"></i> 보관함 저장
+          </button>
+          <a id="appleMusicLink" href="#" target="_blank" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-2.5 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 shadow-sm">
+            <i class="fa-brands fa-apple"></i> Apple Music 듣기
+          </a>
         </div>
+      </div>
+
+      <!-- 유사한 느낌의 추천곡 -->
+      <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+        <div class="text-xs text-gray-400 mb-2 font-medium">비슷한 느낌의 추천곡</div>
+        <div id="similarTracks" class="grid grid-cols-3 gap-2">
+          <!-- JS 렌더링 -->
+        </div>
+      </div>
     </div>
 
-    <div class="mobile-tab-bar">
-        <button type="button" class="tab-item" onclick="switchMobileTab('tabRecent', this)">
-            <i class="fa-regular fa-clock"></i>
-            <span>최근 곡</span>
-        </button>
-        <button type="button" class="tab-item active" onclick="switchMobileTab('tabMain', this)">
-            <i class="fa-solid fa-compass"></i>
-            <span>음악 추천</span>
-        </button>
-        <button type="button" class="tab-item" onclick="switchMobileTab('tabFavs', this)">
-            <i class="fa-solid fa-heart"></i>
-            <span>보관함</span>
-        </button>
+    <!-- 우측: 내 보관함 -->
+    <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 md:col-span-1 flex flex-col h-[780px]">
+      <h2 class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-1.5">
+        <i class="fa-solid fa-heart text-red-500"></i> 내 보관함
+      </h2>
+      <div id="favoritesList" class="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+        <!-- JS 렌더링 -->
+      </div>
     </div>
 
-    <script>
-        let currentMood = 'kr100';
-        let currentSong = null;
+  </div>
 
-        // 고화질 600x600 기본 앨범 아트워크 이미지 폴백 URL (Unsplash 음악 모티프)
-        const DEFAULT_COVER_600 = "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80";
+  <script>
+    // 카테고리 데이터 세트 (실제 앨범 아트 검색 가능한 정확한 이름들)
+    const localDatabase = {
+      chill: [
+        { title: "Off My Face", artist: "Justin Bieber", desc: "잔잔한 어쿠스틱 기타와 감성적인 목소리가 어우러진 휴식곡." },
+        { title: "Peaches", artist: "Justin Bieber", desc: "드라이브하며 들기 딱 좋은 세련되고 감각적인 R&B 트랙." },
+        { title: "Sunday Morning", artist: "Maroon 5", desc: "편안한 여유를 선사하는 클래식 감성ポップ." },
+        { title: "Paris in the Rain", artist: "Lauv", desc: "비 오는 날이나 차 안에서 듣기 좋은 감성적인 팝." },
+        { title: "comethru", artist: "Jeremy Zucker", desc: "솔직하고 담백한 가사와 멜로디의 힐링 송." }
+      ],
+      focus: [
+        { title: "One Summer's Day", artist: "Joe Hisaishi", desc: "센과 치히로의 행방불명 메인 테마곡. 최고 수준의 몰입감." },
+        { title: "Merry-Go-Round of Life", artist: "Joe Hisaishi", desc: "하울의 움직이는 성 OST. 웅장하고 아름다운 피아노 선율." },
+        { title: "Time", artist: "Hans Zimmer", desc: "인셉션 OST. 깊은 집중과 몰입을 유도하는 거장의 명곡." },
+        { title: "River Flows in You", artist: "Yiruma", desc: "마음을 차분하게 가라앉혀주는 섬세한 피아노 스튜디오 트랙." },
+        { title: "Experience", artist: "Ludovico Einaudi", desc: "점진적으로 고조되는 클래식 바이올린 피아노 선율." }
+      ],
+      energy: [
+        { title: "Uptown Funk", artist: "Mark Ronson", desc: "어디서나 기분을 업시켜주는 리드미컬하고 신나는 디스코 펑크." },
+        { title: "Can't Stop the Feeling!", artist: "Justin Timberlake", desc: "밝은 에너지와 활력을 불어넣는 트롤 OST." },
+        { title: "Believer", artist: "Imagine Dragons", desc: "강렬한 비트와 에너지가 넘쳐나는 드럼 록 사운드." },
+        { title: "Bang Bang", artist: "Jessie J, Ariana Grande, Nicki Minaj", desc: "폭발적인 가창력과 신나는 파워풀 트랙." },
+        { title: "Counting Stars", artist: "OneRepublic", desc: "중독성 강한 멜로디와 함께 뛰놀 수 있는 대표 곡." }
+      ],
+      emotional: [
+        { title: "Sparkle", artist: "RADWIMPS", desc: "너의 이름은 OST. 서정적이고 거대한 감동을 주는 곡." },
+        { title: "Nantes", artist: "Beirut", desc: "아날로그 감성을 자극하는 독특하고 아름다운 아코디언 음색." },
+        { title: "Fix You", artist: "Coldplay", desc: "지친 마음을 따뜻하게 위로하는 콜드플레이의 대표 명곡." },
+        { title: "Event Horizon", artist: "YOASOBI", desc: "감성적인 멜로디와 서사가 돋보이는 팝 트랙." },
+        { title: "All of Me", artist: "John Legend", desc: "진심 어린 감정을 전달하는 감 감동적인 발라드." }
+      ]
+    };
 
-        // 한국 Top 100 네트워크 차단/CORS 오류 대비 고품질 트랙 폴백 데이터 (600x600 커버 포함)
-        const DEFAULT_KR100_FALLBACK = [
-            { rank: 1, title: "Supernova", artist: "aespa", artwork: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&auto=format&fit=crop&q=80", emoji: "🇰🇷", desc: "실시간 KR 인기 차트 1위! 에스파의 감각적이고 강렬한 신스 비트 트랙입니다." },
-            { rank: 2, title: "How Sweet", artist: "NewJeans", artwork: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&auto=format&fit=crop&q=80", emoji: "🇰🇷", desc: "실시간 KR 인기 차트 2위! 뉴진스 특유의 쿨하고 매력적인 R&B 그루브." },
-            { rank: 3, title: "한 페이지가 될 수 있게", artist: "DAY6 (데이식스)", artwork: "https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?w=600&auto=format&fit=crop&q=80", emoji: "🇰🇷", desc: "실시간 KR 인기 차트 3위! 데이식스만의 에너지 넘치는 청량 록 사운드." },
-            { rank: 4, title: "Love wins all", artist: "아이유 (IU)", artwork: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80", emoji: "🇰🇷", desc: "실시간 KR 인기 차트 4위! 보컬의 깊은 울림과 대서사시 오케스트라 사운드." },
-            { rank: 5, title: "Spot! (feat. JENNIE)", artist: "지코 (ZICO)", artwork: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=600&auto=format&fit=crop&q=80", emoji: "🇰🇷", desc: "실시간 KR 인기 차트 5위! 두 아티스트의 힙한 케미가 돋보이는 트렌디 트랙." },
-            { rank: 6, title: "Small girl (feat. 도경수)", artist: "이영지", artwork: "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=600&auto=format&fit=crop&q=80", emoji: "🇰🇷", desc: "실시간 KR 인기 차트 6위! 솔직하고 설레는 감성의 미디엄 템포 R&B." },
-            { rank: 7, title: "Whiplash", artist: "aespa", artwork: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&auto=format&fit=crop&q=80", emoji: "🇰🇷", desc: "실시간 KR 인기 차트 7위! 세련되고 압도적인 중독성의 클럽 비트." },
-            { rank: 8, title: "예뻤어", artist: "DAY6 (데이식스)", artwork: "https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?w=600&auto=format&fit=crop&q=80", emoji: "🇰🇷", desc: "실시간 KR 인기 차트 8위! 시대를 타지 않는 멜로딕 록 클래식." },
-            { rank: 9, title: "Magnetic", artist: "ILLIT (아일릿)", artwork: "https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=600&auto=format&fit=crop&q=80", emoji: "🇰🇷", desc: "실시간 KR 인기 차트 9위! 자석처럼 이끌리는 상큼하고 키치한 플러그엔비." },
-            { rank: 10, title: "클락션 (Klaxon)", artist: "(여자)아이들", artwork: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&auto=format&fit=crop&q=80", emoji: "🇰🇷", desc: "실시간 KR 인기 차트 10위! 여름의 무드를 물씬 풍기는 에너지 넘치는 팝." }
-        ];
+    let currentTrack = null;
+    let currentCategoryList = [];
+    let recentTracks = JSON.parse(localStorage.getItem('recentTracks')) || [];
+    let favoriteTracks = JSON.parse(localStorage.getItem('favoriteTracks')) || [];
 
-        function safeGet(key, fallback) {
-            try {
-                const raw = localStorage.getItem(key);
-                return raw ? JSON.parse(raw) : fallback;
-            } catch (e) { return fallback; }
+    // iTunes Search API로 실제 앨범 아트 및 정보 동적 로드
+    async function fetchAlbumArt(title, artist) {
+      try {
+        const query = encodeURIComponent(`${title} ${artist}`);
+        const res = await fetch(`https://itunes.apple.com/search?term=${query}&entity=song&limit=1`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.results && data.results.length > 0) {
+            const track = data.results[0];
+            const artwork = track.artworkUrl100 ? track.artworkUrl100.replace('100x100bb', '600x600bb') : null;
+            return {
+              artworkUrl: artwork || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80',
+              appleMusicUrl: track.trackViewUrl || `https://music.apple.com/kr/search?term=${query}`
+            };
+          }
         }
+      } catch (e) {
+        console.error("Album Art Fetch Failed", e);
+      }
+      return {
+        artworkUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80',
+        appleMusicUrl: `https://music.apple.com/kr/search?term=${encodeURIComponent(title + ' ' + artist)}`
+      };
+    }
 
-        function safeSet(key, value) {
-            try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {}
+    // 카테고리 선택
+    async function selectCategory(cat) {
+      let tracks = [];
+      if (cat === 'kor' || cat === 'usa') {
+        const store = cat === 'kor' ? 'kr' : 'us';
+        try {
+          const res = await fetch(`https://itunes.apple.com/${store}/rss/topsongs/limit=20/json`);
+          const data = await res.json();
+          const entries = data.feed.entry || [];
+          tracks = entries.map(item => ({
+            title: item['im:name'].label,
+            artist: item['im:artist'].label,
+            img: item['im:image'][2].label.replace('170x170', '600x600'),
+            link: item.id.label,
+            desc: `${cat === 'kor' ? '한국' : '미국'} 실시간 인기 차트 TOP 20 트랙입니다.`
+          }));
+        } catch (e) {
+          console.warn("RSS Fetch failed, loading fallback", e);
+          tracks = localDatabase['chill'];
         }
+      } else {
+        tracks = localDatabase[cat] || localDatabase['chill'];
+      }
 
-        let favorites = safeGet('my_music_favs', []);
-        let recentPlayed = safeGet('my_music_recent', []);
+      currentCategoryList = tracks;
+      const firstTrack = tracks[0];
+      await displayTrack(firstTrack);
+    }
 
-        // --- 10,000곡급 대규모 트랙 생성 엔진 ---
-        function generateExpandedLibrary() {
-            const artistsData = [
-                {
-                    artist: "Michael Jackson",
-                    emoji: "🕺",
-                    tag: "팝의 황제 마이클 잭슨의 전설적인 명곡 시리즈.",
-                    cover: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=600&auto=format&fit=crop&q=80",
-                    tracks: [
-                        "Billie Jean", "Beat It", "Thriller", "Smooth Criminal", 
-                        "Man in the Mirror", "Bad", "Black or White", "Rock with You", 
-                        "Human Nature", "Don't Stop 'Til You Get Enough", "Earth Song",
-                        "You Are Not Alone", "Heal the World", "Remember the Time", "Dirty Diana",
-                        "The Way You Make Me Feel", "Wanna Be Startin' Somethin'", "P.Y.T. (Pretty Young Thing)",
-                        "Love Never Felt So Good", "They Don't Care About Us"
-                    ]
-                },
-                {
-                    artist: "DAY6 (데이식스)",
-                    emoji: "🎸",
-                    tag: "믿고 듣는 데이식스 특유의 에너제틱 감성 록 사운드.",
-                    cover: "https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?w=600&auto=format&fit=crop&q=80",
-                    tracks: [
-                        "한 페이지가 될 수 있게", "예뻤어", "Welcome to the Show", "Happy",
-                        "Zombie", "Shoot Me", "Sweet Chaos", "녹아내려요", "LOVE me or LEAVE me",
-                        "행복했던 날들이었다", "Congratulations", "놓아 놓아 놓아", "반드시 웃는다",
-                        "I Loved You", "좋아합니다", "마라톤", "Healer", "도망가자", "DISK 1"
-                    ]
-                },
-                {
-                    artist: "Project Hail Mary (프로젝트 헤일메리)",
-                    emoji: "🚀",
-                    tag: "우주 탐사와 인류 구원의 여정을 담은 SF 웅장 오케스트라 사운드트랙.",
-                    cover: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&auto=format&fit=crop&q=80",
-                    tracks: [
-                        "Hail Mary Main Theme", "Grace & Rocky", "Astrophage Isolation", "Tau Ceti Flight",
-                        "Eridian Symphony", "Eridian Acoustic", "Hail Mary Odyssey", "Amoniac World",
-                        "Xenon Pulse", "Interstellar Rescue", "Taumoeba Discovery", "Goodbye Rocky"
-                    ]
-                },
-                {
-                    artist: "Coldplay",
-                    emoji: "🌌",
-                    tag: "벅차오르는 하모니와 환상적인 오케스트라 팝 록.",
-                    cover: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&auto=format&fit=crop&q=80",
-                    tracks: ["Viva La Vida", "Fix You", "Yellow", "A Sky Full of Stars", "The Scientist", "Clocks", "Hymn for the Weekend", "Paradise", "Adventure of a Lifetime", "Higher Power", "My Universe"]
-                },
-                {
-                    artist: "Taylor Swift",
-                    emoji: "✨",
-                    tag: "전 세계를 사로잡은 감성적인 팝 스토리를 전달하는 트랙.",
-                    cover: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80",
-                    tracks: ["Cruel Summer", "Anti-Hero", "Love Story", "Blank Space", "Shake It Off", "Cardigan", "Willow", "August", "Style", "Enchanted", "You Belong With Me", "Fortnight"]
-                },
-                {
-                    artist: "The Weeknd",
-                    emoji: "🌃",
-                    tag: "세련된 레트로 신스웨이브와 R&B 사운드의 대명사.",
-                    cover: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=600&auto=format&fit=crop&q=80",
-                    tracks: ["Blinding Lights", "Starboy", "Save Your Tears", "Die For You", "The Hills", "Can't Feel My Face", "Out of Time", "I Feel It Coming", "In Your Eyes", "Take My Breath"]
-                },
-                {
-                    artist: "Bruno Mars",
-                    emoji: "🎹",
-                    tag: "폭발적인 가창력과 트렌디한 감성의 어반 팝 그루브.",
-                    cover: "https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=600&auto=format&fit=crop&q=80",
-                    tracks: ["Just the Way You Are", "24K Magic", "That's What I Like", "When I Was Your Man", "Treasure", "Grenade", "Locked Out of Heaven", "Versace on the Floor", "Runaway Baby"]
-                },
-                {
-                    artist: "아이유 (IU)",
-                    emoji: "🕊️",
-                    tag: "깊은 울림을 전하는 감성 보컬과 시적인 가사.",
-                    cover: "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=600&auto=format&fit=crop&q=80",
-                    tracks: ["Love wins all", "밤편지", "에잇 (prod.&feat. SUGA of BTS)", "블루밍 (Blueming)", "좋은 날", "금요일에 만나요", "팔레트", "무릎", "셀러브리티 (Celebrity)", "라일락", "드라마"]
-                },
-                {
-                    artist: "NewJeans",
-                    emoji: "🫧",
-                    tag: "트렌디한 청량함과 감각적인 R&B 팝 감성.",
-                    cover: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&auto=format&fit=crop&q=80",
-                    tracks: ["Hype Boy", "Ditto", "Attention", "OMG", "Super Shy", "ETA", "How Sweet", "Bubble Gum", "Cool With You", "Get Up", "Cookie"]
-                },
-                {
-                    artist: "aespa",
-                    emoji: "⚡",
-                    tag: "독창적인 신스 사운드와 강력한 비트의 K-POP 대표 트랙.",
-                    cover: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&auto=format&fit=crop&q=80",
-                    tracks: ["Supernova", "Whiplash", "Armageddon", "Drama", "Spicy", "Next Level", "Savage", "Black Mamba", "Illusion", "Lucid Dream"]
-                },
-                {
-                    artist: "YOASOBI",
-                    emoji: "👑",
-                    tag: "서사적이고 스피디한 신스 피아노 팝 사운드.",
-                    cover: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=600&auto=format&fit=crop&q=80",
-                    tracks: ["Idol (아이돌)", "Yoru ni Kakeru (밤을 달리다)", "Monster (괴물)", "Gunjo (군청)", "Blessing (축복)", "Kaibutsu", "勇者 (영웅)", "Tracing A Dream"]
-                },
-                {
-                    artist: "RADWIMPS",
-                    emoji: "☄️",
-                    tag: "벅차오르는 애니메이션 오리지널 사운드트랙 감성.",
-                    cover: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&auto=format&fit=crop&q=80",
-                    tracks: ["Sparkle", "Nandemonaiya", "Zenzenzense (전전전세)", "Grand Escape", "Is There Still Anything That Love Can Do?", "Suzume", "Kanata Haluka"]
-                },
-                {
-                    artist: "Hans Zimmer",
-                    emoji: "🚀",
-                    tag: "압도적인 스케일과 밀도 높은 몰입감을 제공하는 영화 음악.",
-                    cover: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&auto=format&fit=crop&q=80",
-                    tracks: ["Cornfield Chase", "Time", "Flight", "First Step", "Day One", "Stay", "Supermarine", "Paul's Dream", "A Dark Knight", "Why Do We Fall?"]
-                },
-                {
-                    artist: "Hisaishi Joe",
-                    emoji: "🎠",
-                    tag: "가슴을 아련하게 만드는 명품 클래식 피아노 오케스트라.",
-                    cover: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80",
-                    tracks: ["Merry-Go-Round of Life", "Summer", "One Summer's Day", "또 다시", "원령공주 테마", "바다가 보이는 마을", "너를 얹고"]
-                }
-            ];
+    // 무작위 추천
+    async function getRandomTrack() {
+      if (!currentCategoryList || currentCategoryList.length === 0) {
+        await selectCategory('chill');
+      }
+      const randomIndex = Math.floor(Math.random() * currentCategoryList.length);
+      await displayTrack(currentCategoryList[randomIndex]);
+    }
 
-            const categories = ['chill', 'focus', 'energy', 'night'];
-            const catalog = { chill: [], focus: [], energy: [], night: [] };
+    // 트랙 표시
+    async function displayTrack(trackObj) {
+      let artworkUrl = trackObj.img;
+      let musicUrl = trackObj.link;
 
-            let totalGenerated = 0;
-            for (let i = 0; i < 2500; i++) {
-                artistsData.forEach((a) => {
-                    const trackName = a.tracks[i % a.tracks.length];
-                    const numSuffix = i > a.tracks.length ? ` (Ver. ${Math.floor(i / a.tracks.length) + 1})` : '';
-                    const fullTitle = trackName + numSuffix;
-                    const catTarget = categories[(totalGenerated) % categories.length];
+      // 이미지가 없는 경우 iTunes Search로 보완
+      if (!artworkUrl) {
+        const fetched = await fetchAlbumArt(trackObj.title, trackObj.artist);
+        artworkUrl = fetched.artworkUrl;
+        musicUrl = fetched.appleMusicUrl;
+      }
 
-                    catalog[catTarget].push({
-                        title: fullTitle,
-                        artist: a.artist,
-                        emoji: a.emoji,
-                        artwork: a.cover || DEFAULT_COVER_600,
-                        desc: a.tag
-                    });
-                    totalGenerated++;
-                });
-            }
-            return catalog;
-        }
+      currentTrack = {
+        title: trackObj.title,
+        artist: trackObj.artist,
+        img: artworkUrl,
+        link: musicUrl || `https://music.apple.com/kr/search?term=${encodeURIComponent(trackObj.title + ' ' + trackObj.artist)}`,
+        desc: trackObj.desc || `${trackObj.artist}의 대표 명곡입니다.`
+      };
 
-        const generatedCatalog = generateExpandedLibrary();
+      // UI 반영
+      document.getElementById('mainTrackTitle').innerText = currentTrack.title;
+      document.getElementById('mainArtistName').innerText = currentTrack.artist;
+      document.getElementById('mainTrackDesc').innerText = currentTrack.desc;
+      document.getElementById('mainTrackImg').src = currentTrack.img;
+      document.getElementById('appleMusicLink').href = currentTrack.link;
 
-        const musicData = {
-            kr100: [], // 실시간 API 및 프록시/폴백 연동
-            us100: [], // 실시간 API 연동
-            chill: generatedCatalog.chill,
-            focus: generatedCatalog.focus,
-            energy: generatedCatalog.energy,
-            night: generatedCatalog.night
-        };
+      updateFavButtonState();
+      addToRecent(currentTrack);
+      renderSimilarTracks();
+    }
 
-        /* 고화질 600x600 변환 및 다중 정규식 세이프티 가공 함수 */
-        function formatArtworkUrl(rawUrl) {
-            if (!rawUrl) return DEFAULT_COVER_600;
-            // 1. 다양한 해상도 패턴(e.g., /100x100bb.jpg, /200x200.png, /1000x1000bb-60.jpg) 변환
-            let formatted = rawUrl.replace(/\/\d+x\d+([a-z0-9\-]*)\./i, '/600x600bb.');
-            // 2. {w}x{h} 형태인 경우 처리
-            formatted = formatted.replace('{w}x{h}', '600x600');
-            return formatted;
-        }
+    // 최근 들은 음악 추가
+    function addToRecent(track) {
+      recentTracks = recentTracks.filter(t => !(t.title === track.title && t.artist === track.artist));
+      recentTracks.unshift(track);
+      if (recentTracks.length > 15) recentTracks.pop();
+      localStorage.setItem('recentTracks', JSON.stringify(recentTracks));
+      renderRecent();
+    }
 
-        // --- 애플뮤직 실시간 RSS API 연동 및 프록시 폴백 처리 ---
-        async function fetchTop100Chart(countryCode) {
-            const rawFeedUrl = `https://itunes.apple.com/${countryCode}/rss/topsongs/limit=100/json`;
-            const proxyFeedUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(rawFeedUrl)}`;
+    // 최근 음악 목록 렌더링
+    function renderRecent() {
+      const el = document.getElementById('recentList');
+      el.innerHTML = recentTracks.map(t => `
+        <div onclick='displayTrack(${JSON.stringify(t).replace(/'/g, "&apos;")})' class="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-xl cursor-pointer transition">
+          <img src="${t.img}" class="w-10 h-10 rounded-lg object-cover flex-shrink-0" alt="art">
+          <div class="min-w-0 flex-1">
+            <div class="text-xs font-bold text-gray-800 text-ellipsis-custom">${t.title}</div>
+            <div class="text-[11px] text-gray-400 text-ellipsis-custom">${t.artist}</div>
+          </div>
+        </div>
+      `).join('');
+    }
 
-            let data = null;
+    // 보관함 토글
+    function toggleFavoriteCurrent() {
+      if (!currentTrack) return;
+      const existsIndex = favoriteTracks.findIndex(t => t.title === currentTrack.title && t.artist === currentTrack.artist);
+      if (existsIndex > -1) {
+        favoriteTracks.splice(existsIndex, 1);
+      } else {
+        favoriteTracks.unshift(currentTrack);
+      }
+      localStorage.setItem('favoriteTracks', JSON.stringify(favoriteTracks));
+      updateFavButtonState();
+      renderFavorites();
+    }
 
-            // 1차: 직접 다이렉트 호출 시도
-            try {
-                const response = await fetch(rawFeedUrl, { cache: "no-cache" });
-                if (response.ok) {
-                    data = await response.json();
-                }
-            } catch (err) {
-                console.warn(`[Direct RSS Fetch Fail] ${countryCode}, trying proxy fallback...`, err);
-            }
+    function updateFavButtonState() {
+      const btn = document.getElementById('favBtn');
+      if (!currentTrack) return;
+      const isFav = favoriteTracks.some(t => t.title === currentTrack.title && t.artist === currentTrack.artist);
+      if (isFav) {
+        btn.innerHTML = `<i class="fa-solid fa-heart text-red-500"></i> 보관함 해제`;
+        btn.classList.add('bg-red-50', 'border-red-200');
+      } else {
+        btn.innerHTML = `<i class="fa-regular fa-heart"></i> 보관함 저장`;
+        btn.classList.remove('bg-red-50', 'border-red-200');
+      }
+    }
 
-            // 2차: CORS 프록시로 회피 호출 시도 (한국 차트 등 직접 차단 응답 시)
-            if (!data) {
-                try {
-                    const proxyResp = await fetch(proxyFeedUrl);
-                    if (proxyResp.ok) {
-                        data = await proxyResp.json();
-                    }
-                } catch (proxyErr) {
-                    console.error(`[Proxy RSS Fetch Fail] ${countryCode}:`, proxyErr);
-                }
-            }
+    // 보관함 렌더링
+    function renderFavorites() {
+      const el = document.getElementById('favoritesList');
+      if (favoriteTracks.length === 0) {
+        el.innerHTML = `<div class="text-xs text-gray-400 text-center py-8">보관된 음악이 없습니다.</div>`;
+        return;
+      }
+      el.innerHTML = favoriteTracks.map(t => `
+        <div onclick='displayTrack(${JSON.stringify(t).replace(/'/g, "&apos;")})' class="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-xl cursor-pointer transition">
+          <img src="${t.img}" class="w-10 h-10 rounded-lg object-cover flex-shrink-0" alt="art">
+          <div class="min-w-0 flex-1">
+            <div class="text-xs font-bold text-gray-800 text-ellipsis-custom">${t.title}</div>
+            <div class="text-[11px] text-gray-400 text-ellipsis-custom">${t.artist}</div>
+          </div>
+        </div>
+      `).join('');
+    }
 
-            // 3차: 결과 데이터 가공
-            if (data && data.feed && data.feed.entry && data.feed.entry.length > 0) {
-                const entries = data.feed.entry;
-                return entries.map((item, index) => {
-                    const rawArtwork = item['im:image'] && item['im:image'][2] ? item['im:image'][2].label : '';
-                    const highResArtwork = formatArtworkUrl(rawArtwork);
+    // 유사 추천곡 렌더링
+    function renderSimilarTracks() {
+      const el = document.getElementById('similarTracks');
+      if (!currentCategoryList || currentCategoryList.length <= 1) {
+        el.innerHTML = '';
+        return;
+      }
+      const filtered = currentCategoryList.filter(t => t.title !== currentTrack.title).slice(0, 3);
+      el.innerHTML = filtered.map(t => `
+        <div onclick='displayTrack(${JSON.stringify(t).replace(/'/g, "&apos;")})' class="p-2 border border-gray-100 rounded-xl hover:bg-gray-50 cursor-pointer transition flex flex-col items-center text-center">
+          <img src="${t.img || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80'}" class="w-12 h-12 rounded-lg object-cover mb-1.5" alt="art">
+          <div class="text-[11px] font-bold text-gray-800 text-ellipsis-custom w-full">${t.title}</div>
+          <div class="text-[10px] text-gray-400 text-ellipsis-custom w-full">${t.artist}</div>
+        </div>
+      `).join('');
+    }
 
-                    return {
-                        rank: index + 1,
-                        title: item['im:name'] ? item['im:name'].label : '곡 제목 없음',
-                        artist: item['im:artist'] ? item['im:artist'].label : '아티스트',
-                        artwork: highResArtwork,
-                        emoji: countryCode === 'kr' ? "🇰🇷" : "🇺🇸",
-                        desc: `실시간 ${countryCode.toUpperCase()} 인기 차트 ${index + 1}위! Apple Music 공식 실시간 데이터입니다.`,
-                        appleMusicUrl: item.link && item.link[0] ? item.link[0].attributes.href : null
-                    };
-                });
-            }
-
-            // 4차: 네트워크가 완전히 차단/실패한 경우 로컬 안전 폴백 제공
-            console.warn(`Using fallback dataset for ${countryCode}`);
-            if (countryCode === 'kr') {
-                return DEFAULT_KR100_FALLBACK;
-            } else {
-                return generatedCatalog.chill.slice(0, 20);
-            }
-        }
-
-        async function loadCategoryData(mood) {
-            if (mood === 'kr100') {
-                if (!musicData.kr100 || musicData.kr100.length === 0) {
-                    musicData.kr100 = await fetchTop100Chart('kr');
-                }
-            } else if (mood === 'us100') {
-                if (!musicData.us100 || musicData.us100.length === 0) {
-                    musicData.us100 = await fetchTop100Chart('us');
-                }
-            }
-        }
-
-        function closeBanner() {
-            document.getElementById('installBanner').style.display = 'none';
-            try { sessionStorage.setItem('pwa_banner_shown', 'true'); } catch (e) {}
-        }
-
-        function getSearchUrl(keyword) {
-            const encoded = encodeURIComponent(keyword);
-            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-            return isMobile ? `music://music.apple.com/search?term=${encoded}` : `https://music.apple.com/kr/search?term=${encoded}`;
-        }
-
-        function switchMobileTab(tabId, btn) {
-            if (window.innerWidth <= 766) {
-                document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-                document.getElementById(tabId).classList.add('active');
-                document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
-                btn.classList.add('active');
-            }
-        }
-
-        document.querySelectorAll('.mood-card').forEach(card => {
-            card.addEventListener('click', async function() {
-                document.querySelectorAll('.mood-card').forEach(c => c.classList.remove('active'));
-                this.classList.add('active');
-                currentMood = this.getAttribute('data-mood');
-                await loadCategoryData(currentMood);
-            });
-        });
-
-        // --- 보관함 기반 취향 가중치 계산 추천 알고리즘 ---
-        function getPersonalizedSong(playlist) {
-            if (!playlist || playlist.length === 0) {
-                return { title: "Supernova", artist: "aespa", artwork: DEFAULT_COVER_600, emoji: "🇰🇷", desc: "네트워크 연결 확인 후 실시간 차트 데이터를 새로고침 해주세요." };
-            }
-
-            let candidates = playlist;
-            if (currentSong) {
-                candidates = playlist.filter(s => s.title !== currentSong.title);
-            }
-            if (candidates.length === 0) candidates = playlist;
-
-            // 보관함이 비어있으면 랜덤 선택
-            if (!favorites || favorites.length === 0) {
-                return candidates[Math.floor(Math.random() * candidates.length)];
-            }
-
-            // 보관함 수집 데이터 기반 가중치 계산
-            const favArtists = favorites.map(f => f.artist);
-            const favKeywords = favorites.map(f => (f.title + " " + (f.desc || '')).toLowerCase());
-
-            const weightedCandidates = candidates.map(song => {
-                let weight = 1; // 기본 가중치
-
-                // 1. 선호 아티스트 가중치 (+4)
-                if (favArtists.includes(song.artist)) {
-                    weight += 4;
-                }
-
-                // 2. 키워드 유사도 가중치
-                const songText = (song.title + " " + (song.desc || '')).toLowerCase();
-                favKeywords.forEach(kw => {
-                    const words = kw.split(' ');
-                    words.forEach(w => {
-                        if (w.length > 1 && songText.includes(w)) {
-                            weight += 0.5;
-                        }
-                    });
-                });
-
-                return { song, weight };
-            });
-
-            const totalWeight = weightedCandidates.reduce((acc, item) => acc + item.weight, 0);
-            let randomNum = Math.random() * totalWeight;
-
-            for (const item of weightedCandidates) {
-                if (randomNum < item.weight) {
-                    return item.song;
-                }
-                randomNum -= item.weight;
-            }
-
-            return candidates[Math.floor(Math.random() * candidates.length)];
-        }
-
-        document.getElementById('recommendBtn').addEventListener('click', async () => {
-            const btn = document.getElementById('recommendBtn');
-            const originalText = btn.innerText;
-            btn.innerText = "추천 곡 분석 중...";
-            btn.style.opacity = "0.8";
-
-            await loadCategoryData(currentMood);
-            
-            btn.innerText = originalText;
-            btn.style.opacity = "1";
-
-            const playlist = musicData[currentMood];
-            const selectedSong = getPersonalizedSong(playlist);
-            selectSong(selectedSong);
-        });
-
-        // 앨범 아트워크 이미지 에러 시 엑박 방지용 핸들러 (Unsplash 600x600 fallback -> emoji fallback)
-        function handleImageError(imgEl, fallbackEmoji) {
-            if (!imgEl.dataset.retried) {
-                imgEl.dataset.retried = "true";
-                imgEl.src = DEFAULT_COVER_600;
-            } else {
-                imgEl.onerror = null;
-                if (imgEl.parentElement) {
-                    imgEl.parentElement.innerText = fallbackEmoji || '🎵';
-                }
-            }
-        }
-
-        function selectSong(song) {
-            if (!song) return;
-            currentSong = song;
-
-            const albumAvatarEl = document.getElementById('albumEmoji');
-            const artworkSrc = song.artwork || DEFAULT_COVER_600;
-            const emojiChar = song.emoji || '🎵';
-
-            albumAvatarEl.innerHTML = `<img src="${artworkSrc}" alt="${song.title}" loading="lazy" onerror="handleImageError(this, '${emojiChar}')" />`;
-
-            document.getElementById('trackTitle').innerText = song.title;
-            document.getElementById('artistName').innerText = song.artist;
-            document.getElementById('trackDesc').innerText = song.desc || "Apple Music 추천 음원 트랙입니다.";
-
-            const keyword = `${song.title} ${song.artist}`;
-            const targetUrl = song.appleMusicUrl || getSearchUrl(keyword);
-            
-            const openBtn = document.getElementById('openAppBtn');
-            openBtn.href = targetUrl;
-
-            addToRecent(song);
-            renderSimilarSongs(song);
-            updateSaveBtnState();
-        }
-
-        function addToRecent(song) {
-            recentPlayed = recentPlayed.filter(s => s.title !== song.title);
-            recentPlayed.unshift(song);
-            safeSet('my_music_recent', recentPlayed);
-            renderRecent();
-        }
-
-        function renderRecent() {
-            const list = document.getElementById('recentList');
-            list.innerHTML = recentPlayed.map((song, i) => {
-                const art = song.artwork || DEFAULT_COVER_600;
-                const emo = song.emoji || '🎵';
-                return `
-                <div class="recent-item" onclick="selectRecent(${i})">
-                    <span class="recent-emoji">
-                        <img src="${art}" style="width:36px;height:36px;border-radius:10px;object-fit:cover;" onerror="handleImageError(this, '${emo}')" />
-                    </span>
-                    <div class="recent-text">
-                        <span class="recent-title">${song.title}</span>
-                        <span class="recent-artist">${song.artist}</span>
-                    </div>
-                </div>
-            `;}).join('');
-        }
-
-        function selectRecent(index) {
-            if (recentPlayed[index]) {
-                selectSong(recentPlayed[index]);
-                if (window.innerWidth <= 766) {
-                    const mainTabBtn = document.querySelectorAll('.tab-item')[1];
-                    switchMobileTab('tabMain', mainTabBtn);
-                }
-            }
-        }
-
-        function renderSimilarSongs(current) {
-            const currentList = musicData[currentMood] && musicData[currentMood].length > 0 ? musicData[currentMood] : musicData.chill;
-            const pool = currentList.filter(s => s.title !== current.title);
-            
-            const scoredPool = pool.map(song => {
-                let score = Math.random() * 2;
-                if (song.artist === current.artist) score += 5;
-                if (favorites.some(f => f.artist === song.artist)) score += 3;
-                return { song, score };
-            });
-
-            scoredPool.sort((a, b) => b.score - a.score);
-            const picked = scoredPool.slice(0, 3).map(item => item.song);
-
-            const grid = document.getElementById('similarGrid');
-            grid.innerHTML = picked.map((song) => {
-                const art = song.artwork || DEFAULT_COVER_600;
-                const emo = song.emoji || '🎵';
-                return `
-                <div class="similar-card" onclick='selectSongDirect(${JSON.stringify(song).replace(/'/g, "&apos;")})'>
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <img src="${art}" style="width:28px;height:28px;border-radius:8px;object-fit:cover;flex-shrink:0;" onerror="handleImageError(this, '${emo}')" />
-                        <div style="overflow:hidden; flex:1;">
-                            <div class="similar-title">${song.title}</div>
-                            <div class="similar-artist">${song.artist}</div>
-                        </div>
-                    </div>
-                </div>
-            `;}).join('');
-        }
-
-        function selectSongDirect(song) {
-            selectSong(song);
-        }
-
-        document.getElementById('saveBtn').addEventListener('click', () => {
-            if (!currentSong) return;
-
-            const index = favorites.findIndex(f => f.title === currentSong.title);
-            if (index > -1) {
-                favorites.splice(index, 1);
-            } else {
-                favorites.push(currentSong);
-            }
-
-            safeSet('my_music_favs', favorites);
-            renderFavorites();
-            updateSaveBtnState();
-        });
-
-        function updateSaveBtnState() {
-            const saveBtn = document.getElementById('saveBtn');
-            if (!currentSong) return;
-
-            const isSaved = favorites.some(f => f.title === currentSong.title);
-            if (isSaved) {
-                saveBtn.innerHTML = '♥ 보관됨';
-                saveBtn.style.background = '#fa233b';
-                saveBtn.style.color = '#ffffff';
-            } else {
-                saveBtn.innerHTML = '♡ 보관함 저장';
-                saveBtn.style.background = '#f2f2f7';
-                saveBtn.style.color = '#1d1d1f';
-            }
-        }
-
-        function renderFavorites() {
-            const list = document.getElementById('favList');
-            const countEl = document.getElementById('favCount');
-            countEl.innerText = `♥ (${favorites.length})`;
-
-            if (favorites.length === 0) {
-                list.innerHTML = `<p style="font-size:13px; color:#86868b; text-align:center; padding:20px;">보관함이 비어있습니다.</p>`;
-                return;
-            }
-
-            list.innerHTML = favorites.map((song, index) => {
-                const url = song.appleMusicUrl || getSearchUrl(`${song.title} ${song.artist}`);
-                const art = song.artwork || DEFAULT_COVER_600;
-                const emo = song.emoji || '🎵';
-
-                return `
-                    <div class="fav-item">
-                        <div class="fav-info">
-                            <img src="${art}" style="width:32px;height:32px;border-radius:8px;object-fit:cover;flex-shrink:0;" onerror="handleImageError(this, '${emo}')" />
-                            <div class="fav-text">
-                                <span class="fav-title">${song.title}</span>
-                                <span class="fav-artist">${song.artist}</span>
-                            </div>
-                        </div>
-                        <div class="fav-actions">
-                            <a class="fav-listen" href="${url}" target="_blank">
-                                <i class="fa-solid fa-play"></i> 듣기
-                            </a>
-                            <button class="fav-del-icon" type="button" onclick="removeFavorite(${index})">
-                                <i class="fa-solid fa-xmark"></i>
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function removeFavorite(index) {
-            favorites.splice(index, 1);
-            safeSet('my_music_favs', favorites);
-            renderFavorites();
-            updateSaveBtnState();
-        }
-
-        window.addEventListener('DOMContentLoaded', async () => {
-            renderRecent();
-            renderFavorites();
-            
-            // 첫 화면 로딩 시 한국 TOP 100 데이터 로드
-            await loadCategoryData('kr100');
-            if (musicData.kr100 && musicData.kr100.length > 0) {
-                selectSong(musicData.kr100[0]);
-            } else {
-                selectSong(musicData.chill[0]);
-            }
-
-            const isMobileOrTablet = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (window.innerWidth <= 1180);
-            const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
-            let alreadyShownInSession = false;
-            try { alreadyShownInSession = sessionStorage.getItem('pwa_banner_shown'); } catch (e) {}
-
-            if (isMobileOrTablet && !isStandalone && !alreadyShownInSession) {
-                document.getElementById('installBanner').style.display = 'flex';
-            }
-        });
-    </script>
+    // 초기화
+    window.addEventListener('DOMContentLoaded', () => {
+      renderRecent();
+      renderFavorites();
+      selectCategory('kor');
+    });
+  </script>
 </body>
 </html>
