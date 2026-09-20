@@ -308,7 +308,7 @@
             <div class="recent-list" id="recentList"></div>
         </div>
 
-        <!-- 모바일 전용 검색 패널 (모바일 탭 연결) -->
+        <!-- 모바일 전용 검색 패널 -->
         <div class="glass-panel mobile-search-panel tab-content" id="tabSearch" style="flex-direction: column; width: 100%;">
             <div class="panel-title"><i class="fa-solid fa-magnifying-glass"></i> 음악 검색</div>
             <div class="search-input-wrapper" style="margin-bottom: 16px;">
@@ -395,7 +395,7 @@
 
         <!-- 보관함 패널 -->
         <div class="glass-panel right-panel tab-content" id="tabFavs">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; align- items: center; margin-bottom: 16px;">
                 <div class="panel-title" style="margin-bottom:0;"><i class="fa-solid fa-heart" style="color: #fa233b;"></i> 내 보관함</div>
                 <span style="font-size: 13px; color: #fa233b; font-weight: 700;" id="favCount">♥ (0)</span>
             </div>
@@ -403,7 +403,7 @@
         </div>
     </div>
 
-    <!-- 모바일 하단 탭 바 (검색 탭 추가됨) -->
+    <!-- 모바일 하단 탭 바 -->
     <div class="mobile-tab-bar">
         <button type="button" class="tab-item" onclick="switchMobileTab('tabRecent', this)">
             <i class="fa-regular fa-clock"></i>
@@ -466,6 +466,7 @@
                     title: title,
                     artist: artist,
                     coverArt: coverArt,
+                    category: category,
                     desc: `${artist}의 유니크한 감성이 담긴 ${category} 스타일 트랙.`
                 });
             }
@@ -490,6 +491,7 @@
                         title: item.name,
                         artist: item.artistName,
                         coverArt: item.artworkUrl100 ? item.artworkUrl100.replace('100x100bb', '300x300bb') : '',
+                        category: targetMoodKey,
                         desc: `실시간 ${countryCode.toUpperCase()} 인기 차트 상위권 히트곡.`
                     }));
                     
@@ -515,28 +517,51 @@
             }
         }
 
-        /* 검색 로직 기능 추가 */
+        /* -------------------------------------------------------------
+         * 1. 애플뮤직 정확도 개선 검색 URL 생성 함수
+         * ------------------------------------------------------------- */
+        function getSearchUrl(title, artist) {
+            // 따옴표로 감싸서 곡명과 가수를 정확하게 검색하도록 쿼리 정형화
+            const cleanTitle = title.replace(/\(Ver\.\s*\d+\)/gi, '').trim();
+            const query = `"${cleanTitle}" "${artist}"`;
+            const encoded = encodeURIComponent(query);
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            
+            return isMobile 
+                ? `music://music.apple.com/search?term=${encoded}`
+                : `https://music.apple.com/kr/search?term=${encoded}`;
+        }
+
+        /* -------------------------------------------------------------
+         * 2. 내부 검색 기능 고도화 (공백 무시, 부분 일치, 유연한 검색)
+         * ------------------------------------------------------------- */
+        function normalizeStr(str) {
+            return (str || '').toLowerCase().replace(/\s+/g, '');
+        }
+
         function handleSearch(query, containerId) {
             const container = document.getElementById(containerId);
-            const trimmed = query.trim().toLowerCase();
+            const rawQuery = query.trim();
 
-            if (!trimmed) {
+            if (!rawQuery) {
                 container.innerHTML = `<p style="font-size:13px; color:#86868b; text-align:center; padding:20px;">검색어를 입력해 주세요.</p>`;
                 return;
             }
 
+            const normalizedQuery = normalizeStr(rawQuery);
             const allSongs = Object.values(musicData).flat();
             const filtered = [];
             const seen = new Set();
 
             for (const song of allSongs) {
-                const titleMatch = song.title.toLowerCase().includes(trimmed);
-                const artistMatch = song.artist.toLowerCase().includes(trimmed);
+                const normTitle = normalizeStr(song.title);
+                const normArtist = normalizeStr(song.artist);
 
-                if ((titleMatch || artistMatch) && !seen.has(song.title + song.artist)) {
+                // 띄어쓰기 없이도, 곡 제목이나 아티스트명에 포함되면 모두 검색
+                if ((normTitle.includes(normalizedQuery) || normArtist.includes(normalizedQuery)) && !seen.has(song.title + song.artist)) {
                     seen.add(song.title + song.artist);
                     filtered.push(song);
-                    if (filtered.length >= 30) break; // 최대 30개 결과 표출
+                    if (filtered.length >= 40) break; // 최대 40개 표출
                 }
             }
 
@@ -591,12 +616,6 @@
             try { sessionStorage.setItem('pwa_banner_shown', 'true'); } catch (e) {}
         }
 
-        function getSearchUrl(keyword) {
-            const encoded = encodeURIComponent(keyword);
-            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-            return isMobile ? `music://music.apple.com/search?term=${encoded}` : `https://music.apple.com/kr/search?term=${encoded}`;
-        }
-
         function switchMobileTab(tabId, btn) {
             if (window.innerWidth <= 766) {
                 document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -631,7 +650,7 @@
             const weightedCandidates = candidates.map(song => {
                 let weight = 1;
                 if (favArtists.includes(song.artist)) {
-                    weight += 4;
+                    weight += 3;
                 }
                 const songText = (song.title + " " + (song.desc || '')).toLowerCase();
                 favKeywords.forEach(kw => {
@@ -676,9 +695,8 @@
             document.getElementById('artistName').innerText = song.artist;
             document.getElementById('trackDesc').innerText = song.desc || "추천 음악 트랙입니다.";
 
-            const keyword = `${song.title} ${song.artist}`;
-            const targetUrl = getSearchUrl(keyword);
-            
+            // 정밀검색 URL 바인딩
+            const targetUrl = getSearchUrl(song.title, song.artist);
             const openBtn = document.getElementById('openAppBtn');
             openBtn.href = targetUrl;
 
@@ -715,19 +733,48 @@
             }
         }
 
+        /* -------------------------------------------------------------
+         * 3. 비슷한 느낌 추천곡 알고리즘 개선 (동일 가수 도배 방지 및 다양화)
+         * ------------------------------------------------------------- */
         function renderSimilarSongs(current) {
             const allSongs = Object.values(musicData).flat();
+            // 현재 곡 제외
             const pool = allSongs.filter(s => s.title !== current.title);
             
-            const scoredPool = pool.map(song => {
-                let score = Math.random() * 2;
-                if (song.artist === current.artist) score += 5;
-                if (favorites.some(f => f.artist === song.artist)) score += 3;
-                return { song, score };
-            });
+            // 동일 아티스트 곡과 타 아티스트 곡 분류
+            const sameArtistPool = pool.filter(s => s.artist === current.artist);
+            const otherArtistPool = pool.filter(s => s.artist !== current.artist);
 
-            scoredPool.sort((a, b) => b.score - a.score);
-            const picked = scoredPool.slice(0, 3).map(item => item.song);
+            // 무작위 셔플 함수
+            const shuffle = (array) => [...array].sort(() => Math.random() - 0.5);
+
+            const picked = [];
+
+            // 1. 같은 아티스트 곡은 최대 1개만 포함시켜 몰림 방지
+            if (sameArtistPool.length > 0) {
+                const shuffledSame = shuffle(sameArtistPool);
+                picked.push(shuffledSame[0]);
+            }
+
+            // 2. 나머지 채우기 (타 아티스트 곡 위주)
+            const shuffledOthers = shuffle(otherArtistPool);
+            for (const song of shuffledOthers) {
+                if (picked.length >= 3) break;
+                // 이미 뽑힌 아티스트와 중복 방지
+                if (!picked.some(p => p.artist === song.artist)) {
+                    picked.push(song);
+                }
+            }
+
+            // 만약 타 아티스트 곡으로 3개를 못채웠을 경우 무작위로 보충
+            if (picked.length < 3) {
+                for (const song of shuffledOthers) {
+                    if (picked.length >= 3) break;
+                    if (!picked.some(p => p.title === song.title)) {
+                        picked.push(song);
+                    }
+                }
+            }
 
             const grid = document.getElementById('similarGrid');
             grid.innerHTML = picked.map((song) => `
@@ -785,7 +832,7 @@
             }
 
             list.innerHTML = favorites.map((song, index) => {
-                const url = getSearchUrl(`${song.title} ${song.artist}`);
+                const url = getSearchUrl(song.title, song.artist);
                 return `
                     <div class="fav-item">
                         <div class="fav-info">
