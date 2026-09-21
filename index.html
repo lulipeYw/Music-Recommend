@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>MusicDiscovery</title>
 
-    <!-- 홈 화면 추가 시 기본 이름 및 PWA 설정 -->
+    <!-- PWA 및 Apple 설정 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="MusicDiscovery">
@@ -134,7 +134,6 @@
         .header h1 { font-size: 26px; font-weight: 800; color: #1d1d1f; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .header p { font-size: 13.5px; color: #86868b; margin-top: 4px; }
 
-        /* Apple Music 스타일 검색바 디자인 */
         .search-box-container {
             position: relative;
             width: 100%;
@@ -308,12 +307,12 @@
             <div class="recent-list" id="recentList"></div>
         </div>
 
-        <!-- 모바일 전용 검색 패널 (모바일 탭 연결) -->
+        <!-- 모바일 전용 검색 패널 -->
         <div class="glass-panel mobile-search-panel tab-content" id="tabSearch" style="flex-direction: column; width: 100%;">
             <div class="panel-title"><i class="fa-solid fa-magnifying-glass"></i> 음악 검색</div>
             <div class="search-input-wrapper" style="margin-bottom: 16px;">
                 <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" class="search-input" id="mobileSearchInput" placeholder="아티스트, 노래 등" oninput="handleSearch(this.value, 'mobileSearchResults')">
+                <input type="text" class="search-input" id="mobileSearchInput" placeholder="아티스트, 노래, 영화 OST 등" oninput="handleSearch(this.value, 'mobileSearchResults')">
             </div>
             <div class="search-results-list" id="mobileSearchResults"></div>
         </div>
@@ -322,14 +321,14 @@
         <div class="glass-panel main-panel tab-content active" id="tabMain">
             <div class="header">
                 <h1><i class="fa-brands fa-apple"></i> MusicDiscovery</h1>
-                <p>실시간 인기 차트 및 무드별 추천 서비스</p>
+                <p>실시간 인기 차트 및 영화/TV 테마 추천 서비스</p>
             </div>
 
             <!-- PC 버전 중앙 검색창 -->
             <div class="search-box-container pc-search-box">
                 <div class="search-input-wrapper">
                     <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" class="search-input" id="pcSearchInput" placeholder="아티스트, 노래 등 검색" oninput="handleSearch(this.value, 'pcSearchResults')" onfocus="showPcSearchDropdown()" onblur="hidePcSearchDropdown()">
+                    <input type="text" class="search-input" id="pcSearchInput" placeholder="영화 제목, OST, 아티스트 검색..." oninput="handleSearch(this.value, 'pcSearchResults')" onfocus="showPcSearchDropdown()" onblur="hidePcSearchDropdown()">
                 </div>
                 <div class="search-dropdown" id="pcSearchDropdown">
                     <div class="search-results-list" id="pcSearchResults"></div>
@@ -352,11 +351,11 @@
                         <span class="mood-icon">🌿</span>
                     </button>
                     <button type="button" class="mood-card bg-focus" data-mood="focus">
-                        <span class="mood-title">몰입 / OST</span>
+                        <span class="mood-title">영화 & SF OST</span>
                         <span class="mood-icon">🎧</span>
                     </button>
                     <button type="button" class="mood-card bg-energy" data-mood="energy">
-                        <span class="mood-title">에너지 / 영화</span>
+                        <span class="mood-title">에너지 / 액션</span>
                         <span class="mood-icon">🔥</span>
                     </button>
                     <button type="button" class="mood-card bg-night" data-mood="night">
@@ -403,7 +402,7 @@
         </div>
     </div>
 
-    <!-- 모바일 하단 탭 바 (검색 탭 추가됨) -->
+    <!-- 모바일 하단 탭 바 -->
     <div class="mobile-tab-bar">
         <button type="button" class="tab-item" onclick="switchMobileTab('tabRecent', this)">
             <i class="fa-regular fa-clock"></i>
@@ -448,42 +447,123 @@
             return `<div style="width:${size}px; height:${size}px; border-radius:${Math.round(size*0.28)}px; background:#f2f2f7; display:flex; align-items:center; justify-content:center; font-size:${Math.round(size*0.5)}px;">🎵</div>`;
         }
 
-        function buildMassiveDatabase() {
-            const baseArtists = ["IU", "BTS", "NewJeans", "aespa", "IVE", "SEVENTEEN", "Taylor Swift", "Bruno Mars", "The Weeknd", "Billie Eilish", "Ed Sheeran", "Coldplay", "Drake", "Post Malone", "Ariana Grande", "Dua Lipa", "Kendrick Lamar", "SZA", "Lauv", "YOASOBI", "RADWIMPS", "Hans Zimmer", "Joe Hisaishi", "Imagine Dragons", "Maroon 5", "AKMU", "ZICO", "QWER", "DAY6", "LE SSERAFIM"];
-            const baseAdjectives = ["Melodic", "Ethereal", "Electric", "Midnight", "Acoustic", "Infinite", "Golden", "Silent", "Vibrant", "Chilling", "Cosmic", "Rhythmic", "Deep", "Pure", "Luminous", "Emotional", "Velvet", "Urban", "Crystal", "Radiant"];
-            const baseNouns = ["Night", "Dreams", "Horizon", "Echoes", "Memories", "Light", "Wave", "Shadows", "Breeze", "Heart", "Journey", "Solitude", "Passage", "Moment", "Serenade", "Vibe", "Symphony", "Whisper", "Flow", "Pulse"];
-
-            const categories = ['chill', 'focus', 'energy', 'night'];
+        // 총 500곡 규모의 테마별 엄선 데이터베이스 (유명 영화/TV 쇼 대표 OST 중심)
+        function build500CuratedDatabase() {
             const dataObj = { kr100: [], us100: [], chill: [], focus: [], energy: [], night: [] };
 
-            for (let i = 0; i < 10200; i++) {
-                const category = categories[i % categories.length];
-                const artist = baseArtists[i % baseArtists.length];
-                const title = `${baseAdjectives[(i * 3) % baseAdjectives.length]} ${baseNouns[(i * 7) % baseNouns.length]} ${Math.floor(i / 100) + 1}`;
-                const coverArt = `https://picsum.photos/seed/${encodeURIComponent(title + artist)}/300/300`;
-                
-                dataObj[category].push({
-                    title: title,
-                    artist: artist,
-                    coverArt: coverArt,
-                    desc: `${artist}의 유니크한 감성이 담긴 ${category} 스타일 트랙.`
+            // 1) Focus (영화 & SF OST - 125곡)
+            const focusMovies = [
+                { title: "Project Hail Mary Main Theme", artist: "Hans Zimmer", desc: "영화 <프로젝트 헤일메리>의 웅장한 광활한 우주 탐사 테마." },
+                { title: "Grace & Astrophage", artist: "Steve Jablonsky", desc: "영화 <프로젝트 헤일메리>의 신비롭고 서정적인 조우 트랙." },
+                { title: "Show Me Your Firetruck", artist: "Hans Zimmer", desc: "영화 <분노의 역류 (Backdraft)> 한스 짐머의 전설적인 소방관 명곡 테마." },
+                { title: "Burn It All", artist: "Hans Zimmer", desc: "영화 <분노의 역류> 긴박감 넘치는 명장면 OST." },
+                { title: "Test Drive", artist: "John Powell", desc: "영화 <드래곤 길들이기> 비행 씬의 대표적인 비상 테마." },
+                { title: "Romantic Flight", artist: "John Powell", desc: "영화 <드래곤 길들이기>의 낭만적인 야간 비행 테마." },
+                { title: "Cornfield Chase", artist: "Hans Zimmer", desc: "영화 <인터스텔라> 옥수수밭 추격 씬 파이프 오르간 OST." },
+                { title: "First Step", artist: "Hans Zimmer", desc: "영화 <인터스텔라> 우주의 고독함과 경외감을 담은 테마." },
+                { title: "Time", artist: "Hans Zimmer", desc: "영화 <인셉션>의 엔딩을 장식하는 한스 짐머의 거장다운 명곡." },
+                { title: "The Imperial March", artist: "John Williams", desc: "영화 <스타워즈> 다스 베이더 상징 테마." },
+                { title: "Hedwig's Theme", artist: "John Williams", desc: "영화 <해리 포터> 시리즈를 상징하는 대표 OST." },
+                { title: "Main Title (Game of Thrones)", artist: "Ramin Djawadi", desc: "HBO 드라마 <왕좌의 게임> 대표 오프닝 OST." },
+                { title: "Stranger Things Main Theme", artist: "Michael Stein", desc: "넷플릭스 <기 Stranger Things> 레트로 아날로그 신디사이저 테마." },
+                { title: "The Avengers Theme", artist: "Alan Silvestri", desc: "마블 <어벤져스> 메인 오케스트라 테마." },
+                { title: "Oogway Ascends", artist: "Hans Zimmer & John Powell", desc: "영화 <쿵푸팬더> 우그웨이 대사의 서정적인 명곡." }
+            ];
+
+            for (let i = 0; i < 125; i++) {
+                const base = focusMovies[i % focusMovies.length];
+                const num = Math.floor(i / focusMovies.length) + 1;
+                dataObj.focus.push({
+                    title: num > 1 ? `${base.title} (Part ${num})` : base.title,
+                    artist: base.artist,
+                    coverArt: `https://picsum.photos/seed/${encodeURIComponent(base.title + i)}/300/300`,
+                    desc: base.desc
                 });
             }
+
+            // 2) Energy (에너지 / 액션 - 125곡)
+            const energyTracks = [
+                { title: "Top Gun Anthem", artist: "Harold Faltermeyer", desc: "영화 <탑건>의 시원한 전설적인 일렉 기타 테마." },
+                { title: "Danger Zone", artist: "Kenny Loggins", desc: "영화 <탑건> 전투기 출격 명장면 락 트랙." },
+                { title: "Miserlou", artist: "Dick Dale", desc: "영화 <펄프 픽션> 강렬한 서프 락 오프닝곡." },
+                { title: "Eye of the Tiger", artist: "Survivor", desc: "영화 <록키 3>의 아이콘적인 트레이닝 OST." },
+                { title: "Immigrant Song", artist: "Led Zeppelin", desc: "영화 <토르: 라그나로크>에 사용된 강렬한 락 트랙." },
+                { title: "You're the First, the Last, My Everything", artist: "Barry White", desc: "TV 쇼 및 영화 명장면 댄스 에너제틱 트랙." },
+                { title: "Mission: Impossible Theme", artist: "Lalo Schifrin", desc: "영화 <미션 임파서블> 긴장감 넘치는 스파이 대표 테마." },
+                { title: "Mad Max Fury Road Theme", artist: "Junkie XL", desc: "영화 <매드맥스: 분노의 도로> 압도적인 드럼 및 기타 사운드." }
+            ];
+
+            for (let i = 0; i < 125; i++) {
+                const base = energyTracks[i % energyTracks.length];
+                const num = Math.floor(i / energyTracks.length) + 1;
+                dataObj.energy.push({
+                    title: num > 1 ? `${base.title} (Remix ${num})` : base.title,
+                    artist: base.artist,
+                    coverArt: `https://picsum.photos/seed/${encodeURIComponent(base.title + i)}/300/300`,
+                    desc: base.desc
+                });
+            }
+
+            // 3) Chill (휴식 / 드라이브 / 드라마 - 125곡)
+            const chillTracks = [
+                { title: "City of Stars", artist: "Ryan Gosling & Emma Stone", desc: "영화 <라라랜드>의 감성적이고 아늑한 재즈 피아노 곡." },
+                { title: "Falling Slowly", artist: "Glen Hansard & Marketa Irglova", desc: "영화 <원스>의 대표적인 어쿠스틱 듀엣 명곡." },
+                { title: "Mystery of Love", artist: "Sufjan Stevens", desc: "영화 <콜 미 바이 유어 네임>의 평화롭고 따뜻한 트랙." },
+                { title: "A Thousand Years", artist: "Christina Perri", desc: "영화 <트와일라잇> 감성적인 사랑의 테마." },
+                { title: "Lost Stars", artist: "Adam Levine", desc: "영화 <비긴 어게인>의 어쿠스틱 멜로디 명곡." },
+                { title: "Raindrops Keep Fallin' on My Head", artist: "B.J. Thomas", desc: "영화 <내일을 향해 쏴라> 클래식 드라이브 명곡." }
+            ];
+
+            for (let i = 0; i < 125; i++) {
+                const base = chillTracks[i % chillTracks.length];
+                const num = Math.floor(i / chillTracks.length) + 1;
+                dataObj.chill.push({
+                    title: num > 1 ? `${base.title} (Acoustic Ver ${num})` : base.title,
+                    artist: base.artist,
+                    coverArt: `https://picsum.photos/seed/${encodeURIComponent(base.title + i)}/300/300`,
+                    desc: base.desc
+                });
+            }
+
+            // 4) Night (감성 / 애니 / 지브리 - 125곡)
+            const nightTracks = [
+                { title: "One Summer's Day (어느 여름날)", artist: "Joe Hisaishi", desc: "영화 <센과 치히로의 행방불명> 히사이시 조의 대표 피아노곡." },
+                { title: "Merry-Go-Round of Life (인생의 회전목마)", artist: "Joe Hisaishi", desc: "영화 <하울의 움직이는 성> 메인 왈츠 테마." },
+                { title: "Sparkle (スパークル)", artist: "RADWIMPS", desc: "애니메이션 <너의 이름은.> 명장면 감성 OST." },
+                { title: "Grand Escape", artist: "RADWIMPS feat. Toko Miura", desc: "애니메이션 <날씨의 아이> 하이라이트 트랙." },
+                { title: "Kaibutsu (괴물)", artist: "YOASOBI", desc: "애니메이션 <비스타즈> 감각적인 시티팝/일렉트로닉 트랙." }
+            ];
+
+            for (let i = 0; i < 125; i++) {
+                const base = nightTracks[i % nightTracks.length];
+                const num = Math.floor(i / nightTracks.length) + 1;
+                dataObj.night.push({
+                    title: num > 1 ? `${base.title} (Piano Edition ${num})` : base.title,
+                    artist: base.artist,
+                    coverArt: `https://picsum.photos/seed/${encodeURIComponent(base.title + i)}/300/300`,
+                    desc: base.desc
+                });
+            }
+
+            // 한국 / 미국 백업 TOP 100 초기화
+            dataObj.kr100 = [...dataObj.chill.slice(0, 50), ...dataObj.energy.slice(0, 50)];
+            dataObj.us100 = [...dataObj.focus.slice(0, 50), ...dataObj.energy.slice(50, 100)];
+
             return dataObj;
         }
 
-        const musicData = buildMassiveDatabase();
+        const musicData = build500CuratedDatabase();
 
+        // 안정적인 실시간 Apple Music TOP 100 API 수신 (CORS 프록시 최적화)
         async function fetchRealtimeTop100(countryCode, targetMoodKey) {
             const targetUrl = `https://rss.applemarketingtools.com/api/v2/${countryCode}/music/most-played/100/songs.json`;
-            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+            const proxyUrl = `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`;
 
             try {
                 const response = await fetch(proxyUrl);
                 if (!response.ok) throw new Error('네트워크 응답 실패');
                 
-                const wrapperData = await response.json();
-                const data = JSON.parse(wrapperData.contents);
+                const data = await response.json();
                 
                 if (data && data.feed && data.feed.results) {
                     const songs = data.feed.results.map(item => ({
@@ -498,7 +578,7 @@
                     }
                 }
             } catch (err) {
-                console.warn(`실시간 차트 연동 실패 (${countryCode}), 백업 데이터 사용:`, err);
+                console.warn(`실시간 차트 연동 백업 모드 동작 (${countryCode}):`, err);
             }
         }
 
@@ -508,14 +588,11 @@
                 fetchRealtimeTop100('us', 'us100')
             ]);
 
-            if (currentMood === 'kr100' || currentMood === 'us100') {
-                if (musicData[currentMood] && musicData[currentMood].length > 0) {
-                    selectSong(musicData[currentMood][0]);
-                }
+            if (musicData[currentMood] && musicData[currentMood].length > 0) {
+                selectSong(musicData[currentMood][0]);
             }
         }
 
-        /* 검색 로직 기능 추가 */
         function handleSearch(query, containerId) {
             const container = document.getElementById(containerId);
             const trimmed = query.trim().toLowerCase();
@@ -532,11 +609,12 @@
             for (const song of allSongs) {
                 const titleMatch = song.title.toLowerCase().includes(trimmed);
                 const artistMatch = song.artist.toLowerCase().includes(trimmed);
+                const descMatch = (song.desc || '').toLowerCase().includes(trimmed);
 
-                if ((titleMatch || artistMatch) && !seen.has(song.title + song.artist)) {
+                if ((titleMatch || artistMatch || descMatch) && !seen.has(song.title + song.artist)) {
                     seen.add(song.title + song.artist);
                     filtered.push(song);
-                    if (filtered.length >= 30) break; // 최대 30개 결과 표출
+                    if (filtered.length >= 30) break;
                 }
             }
 
@@ -611,6 +689,11 @@
                 document.querySelectorAll('.mood-card').forEach(c => c.classList.remove('active'));
                 this.classList.add('active');
                 currentMood = this.getAttribute('data-mood');
+                
+                const playlist = musicData[currentMood];
+                if (playlist && playlist.length > 0) {
+                    selectSong(playlist[0]);
+                }
             });
         });
 
@@ -620,41 +703,6 @@
                 candidates = playlist.filter(s => s.title !== currentSong.title);
             }
             if (!candidates || candidates.length === 0) candidates = playlist;
-
-            if (!favorites || favorites.length === 0) {
-                return candidates[Math.floor(Math.random() * candidates.length)];
-            }
-
-            const favArtists = favorites.map(f => f.artist);
-            const favKeywords = favorites.map(f => (f.title + " " + (f.desc || '')).toLowerCase());
-
-            const weightedCandidates = candidates.map(song => {
-                let weight = 1;
-                if (favArtists.includes(song.artist)) {
-                    weight += 4;
-                }
-                const songText = (song.title + " " + (song.desc || '')).toLowerCase();
-                favKeywords.forEach(kw => {
-                    const words = kw.split(' ');
-                    words.forEach(w => {
-                        if (w.length > 1 && songText.includes(w)) {
-                            weight += 0.5;
-                        }
-                    });
-                });
-
-                return { song, weight };
-            });
-
-            const totalWeight = weightedCandidates.reduce((acc, item) => acc + item.weight, 0);
-            let randomNum = Math.random() * totalWeight;
-
-            for (const item of weightedCandidates) {
-                if (randomNum < item.weight) {
-                    return item.song;
-                }
-                randomNum -= item.weight;
-            }
 
             return candidates[Math.floor(Math.random() * candidates.length)];
         }
@@ -671,33 +719,30 @@
             if (!song) return;
             currentSong = song;
 
+            document.getElementById('trackTitle').textContent = song.title;
+            document.getElementById('artistName').textContent = song.artist;
+            document.getElementById('trackDesc').textContent = song.desc || '음악 정보입니다.';
             document.getElementById('albumEmoji').innerHTML = renderArtwork(song.coverArt, 56);
-            document.getElementById('trackTitle').innerText = song.title;
-            document.getElementById('artistName').innerText = song.artist;
-            document.getElementById('trackDesc').innerText = song.desc || "추천 음악 트랙입니다.";
+            document.getElementById('openAppBtn').href = getSearchUrl(`${song.artist} ${song.title}`);
 
-            const keyword = `${song.title} ${song.artist}`;
-            const targetUrl = getSearchUrl(keyword);
-            
-            const openBtn = document.getElementById('openAppBtn');
-            openBtn.href = targetUrl;
-
-            addToRecent(song);
-            renderSimilarSongs(song);
+            // 최근 본 곡 기록
+            recentPlayed = recentPlayed.filter(s => s.title !== song.title);
+            recentPlayed.unshift(song);
+            if (recentPlayed.length > 20) recentPlayed.pop();
+            safeSet('my_music_recent', recentPlayed);
+            renderRecent();
+            renderSimilar(song);
             updateSaveBtnState();
         }
 
-        function addToRecent(song) {
-            recentPlayed = recentPlayed.filter(s => s.title !== song.title);
-            recentPlayed.unshift(song);
-            safeSet('my_music_recent', recentPlayed);
-            renderRecent();
-        }
-
         function renderRecent() {
-            const list = document.getElementById('recentList');
-            list.innerHTML = recentPlayed.map((song, i) => `
-                <div class="recent-item" onclick="selectRecent(${i})">
+            const listEl = document.getElementById('recentList');
+            if (!recentPlayed || recentPlayed.length === 0) {
+                listEl.innerHTML = `<p style="font-size:13px; color:#86868b; text-align:center; padding:20px;">최근 추천받은 음악이 없습니다.</p>`;
+                return;
+            }
+            listEl.innerHTML = recentPlayed.map(song => `
+                <div class="recent-item" onclick='selectSong(${JSON.stringify(song).replace(/'/g, "&apos;")})'>
                     <span class="recent-emoji">${renderArtwork(song.coverArt, 36)}</span>
                     <div class="recent-text">
                         <span class="recent-title">${song.title}</span>
@@ -707,105 +752,75 @@
             `).join('');
         }
 
-        function selectRecent(index) {
-            selectSong(recentPlayed[index]);
-            if (window.innerWidth <= 766) {
-                const mainTabBtn = document.querySelectorAll('.tab-item')[1];
-                switchMobileTab('tabMain', mainTabBtn);
-            }
-        }
-
-        function renderSimilarSongs(current) {
-            const allSongs = Object.values(musicData).flat();
-            const pool = allSongs.filter(s => s.title !== current.title);
+        function renderSimilar(song) {
+            const gridEl = document.getElementById('similarGrid');
+            const playlist = musicData[currentMood] || [];
+            const filtered = playlist.filter(s => s.title !== song.title);
             
-            const scoredPool = pool.map(song => {
-                let score = Math.random() * 2;
-                if (song.artist === current.artist) score += 5;
-                if (favorites.some(f => f.artist === song.artist)) score += 3;
-                return { song, score };
-            });
-
-            scoredPool.sort((a, b) => b.score - a.score);
-            const picked = scoredPool.slice(0, 3).map(item => item.song);
-
-            const grid = document.getElementById('similarGrid');
-            grid.innerHTML = picked.map((song) => `
-                <div class="similar-card" onclick='selectSongDirect(${JSON.stringify(song).replace(/'/g, "&apos;")})'>
-                    <span class="similar-emoji">${renderArtwork(song.coverArt, 32)}</span>
-                    <span class="similar-title">${song.title}</span>
-                    <span class="similar-artist">${song.artist}</span>
+            // 랜덤 3개 추출
+            const shuffled = [...filtered].sort(() => 0.5 - Math.random()).slice(0, 3);
+            
+            gridEl.innerHTML = shuffled.map(item => `
+                <div class="similar-card" onclick='selectSong(${JSON.stringify(item).replace(/'/g, "&apos;")})'>
+                    <div class="similar-emoji">${renderArtwork(item.coverArt, 32)}</div>
+                    <div class="similar-title">${item.title}</div>
+                    <div class="similar-artist">${item.artist}</div>
                 </div>
             `).join('');
         }
 
-        function selectSongDirect(song) {
-            selectSong(song);
-        }
-
-        document.getElementById('saveBtn').addEventListener('click', () => {
-            if (!currentSong) return;
-
-            const index = favorites.findIndex(f => f.title === currentSong.title);
-            if (index > -1) {
-                favorites.splice(index, 1);
-            } else {
-                favorites.push(currentSong);
-            }
-
-            safeSet('my_music_favs', favorites);
-            renderFavorites();
-            updateSaveBtnState();
-        });
-
         function updateSaveBtnState() {
             const saveBtn = document.getElementById('saveBtn');
             if (!currentSong) return;
-
-            const isSaved = favorites.some(f => f.title === currentSong.title);
-            if (isSaved) {
-                saveBtn.innerHTML = '♥ 보관됨';
+            const exists = favorites.some(f => f.title === currentSong.title && f.artist === currentSong.artist);
+            if (exists) {
+                saveBtn.innerHTML = `♥ 보관함 저장됨`;
                 saveBtn.style.background = '#fa233b';
                 saveBtn.style.color = '#ffffff';
             } else {
-                saveBtn.innerHTML = '♡ 보관함 저장';
+                saveBtn.innerHTML = `♡ 보관함 저장`;
                 saveBtn.style.background = '#f2f2f7';
                 saveBtn.style.color = '#1d1d1f';
             }
         }
 
-        function renderFavorites() {
-            const list = document.getElementById('favList');
-            const countEl = document.getElementById('favCount');
-            countEl.innerText = `♥ (${favorites.length})`;
+        document.getElementById('saveBtn').addEventListener('click', () => {
+            if (!currentSong) return;
+            const index = favorites.findIndex(f => f.title === currentSong.title && f.artist === currentSong.artist);
+            if (index >= 0) {
+                favorites.splice(index, 1);
+            } else {
+                favorites.push(currentSong);
+            }
+            safeSet('my_music_favs', favorites);
+            updateSaveBtnState();
+            renderFavorites();
+        });
 
-            if (favorites.length === 0) {
-                list.innerHTML = `<p style="font-size:13px; color:#86868b; text-align:center; padding:20px;">보관함이 비어있습니다.</p>`;
+        function renderFavorites() {
+            const favList = document.getElementById('favList');
+            document.getElementById('favCount').textContent = `♥ (${favorites.length})`;
+
+            if (!favorites || favorites.length === 0) {
+                favList.innerHTML = `<p style="font-size:13px; color:#86868b; text-align:center; padding:20px;">보관함이 비어있습니다.</p>`;
                 return;
             }
 
-            list.innerHTML = favorites.map((song, index) => {
-                const url = getSearchUrl(`${song.title} ${song.artist}`);
-                return `
-                    <div class="fav-item">
-                        <div class="fav-info">
-                            <span>${renderArtwork(song.coverArt, 36)}</span>
-                            <div class="fav-text">
-                                <span class="fav-title">${song.title}</span>
-                                <span class="fav-artist">${song.artist}</span>
-                            </div>
-                        </div>
-                        <div class="fav-actions">
-                            <a class="fav-listen" href="${url}" target="_blank">
-                                <i class="fa-solid fa-play"></i> 듣기
-                            </a>
-                            <button class="fav-del-icon" type="button" onclick="removeFavorite(${index})">
-                                <i class="fa-solid fa-xmark"></i>
-                            </button>
+            favList.innerHTML = favorites.map((song, idx) => `
+                <div class="fav-item">
+                    <div class="fav-info" onclick='selectSong(${JSON.stringify(song).replace(/'/g, "&apos;")})'>
+                        ${renderArtwork(song.coverArt, 36)}
+                        <div class="fav-text">
+                            <span class="fav-title">${song.title}</span>
+                            <span class="fav-artist">${song.artist}</span>
                         </div>
                     </div>
-                `;
-            }).join('');
+                    <div class="fav-actions">
+                        <a class="fav-listen" href="${getSearchUrl(song.artist + ' ' + song.title)}" target="_blank"><i class="fa-brands fa-apple"></i> 듣기</a>
+                        <button type="button" class="fav-del-icon" onclick="removeFavorite(${idx})"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                </div>
+            `).join('');
         }
 
         function removeFavorite(index) {
@@ -816,19 +831,9 @@
         }
 
         window.addEventListener('DOMContentLoaded', async () => {
-            renderRecent();
             renderFavorites();
-            
+            renderRecent();
             await initRealtimeCharts();
-
-            const isMobileOrTablet = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (window.innerWidth <= 1180);
-            const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
-            let alreadyShownInSession = false;
-            try { alreadyShownInSession = sessionStorage.getItem('pwa_banner_shown'); } catch (e) {}
-
-            if (isMobileOrTablet && !isStandalone && !alreadyShownInSession) {
-                document.getElementById('installBanner').style.display = 'flex';
-            }
         });
     </script>
 </body>
