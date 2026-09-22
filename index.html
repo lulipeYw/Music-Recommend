@@ -347,15 +347,15 @@
                         <span class="mood-icon">🇺🇸</span>
                     </button>
                     <button type="button" class="mood-card bg-chill" data-mood="chill">
-                        <span class="mood-title">휴식 / K-POP</span>
+                        <span class="mood-title">휴식 / 드라이브</span>
                         <span class="mood-icon">🌿</span>
                     </button>
                     <button type="button" class="mood-card bg-focus" data-mood="focus">
-                        <span class="mood-title">영화 & SF OST</span>
+                        <span class="mood-title">몰입 / OST</span>
                         <span class="mood-icon">🎧</span>
                     </button>
                     <button type="button" class="mood-card bg-energy" data-mood="energy">
-                        <span class="mood-title">에너지 / 액션</span>
+                        <span class="mood-title">에너지 / 영화</span>
                         <span class="mood-icon">🔥</span>
                     </button>
                     <button type="button" class="mood-card bg-night" data-mood="night">
@@ -440,7 +440,7 @@
         let favorites = safeGet('my_music_favs', []);
         let recentPlayed = safeGet('my_music_recent', []);
 
-        // 고화질 아트워크 안전 렌더러
+        // 고화질 아트워크 렌더러
         function renderArtwork(coverUrl, size = 56) {
             const sz = size;
             const radius = Math.round(sz * 0.28);
@@ -450,35 +450,28 @@
             return `<div style="width:${sz}px; height:${sz}px; border-radius:${radius}px; background:linear-gradient(135deg, #fa233b, #ff6040); color:#ffffff; display:flex; align-items:center; justify-content:center; font-size:${Math.round(sz*0.45)}px;">🎵</div>`;
         }
 
-        // JSONP 방식을 활용해 CORS 에러를 완전히 우회하는 iTunes API 검색
-        function fetchSongArtJSONP(title, artist) {
-            return new Promise((resolve) => {
-                const query = encodeURIComponent(`${artist} ${title}`);
-                const callbackName = 'jp_art_' + Math.floor(Math.random() * 1000000);
-                const script = document.createElement('script');
+        // 검색어 정제 함수 (특수문자 및 괄호 제거로 iTunes API 검색 성공률 극대화)
+        function cleanQuery(str) {
+            if (!str) return '';
+            return str.replace(/\([^)]*\)/g, '').replace(/&/g, ' ').replace(/[-_]/g, ' ').trim();
+        }
 
-                window[callbackName] = function(data) {
-                    try {
-                        if (data && data.results && data.results.length > 0) {
-                            const art = data.results[0].artworkUrl100.replace('100x100bb', '600x600bb');
-                            resolve(art);
-                        } else {
-                            resolve('');
-                        }
-                    } catch (e) { resolve(''); }
-                    delete window[callbackName];
-                    if (script.parentNode) script.parentNode.removeChild(script);
-                };
-
-                script.onerror = function() {
-                    delete window[callbackName];
-                    if (script.parentNode) script.parentNode.removeChild(script);
-                    resolve('');
-                };
-
-                script.src = `https://itunes.apple.com/search?term=${query}&entity=song&limit=1&callback=${callbackName}`;
-                document.body.appendChild(script);
-            });
+        // iTunes API를 통한 600x600 고화질 아트워크 연동
+        async function fetchSongArt(title, artist) {
+            try {
+                const cleanedArtist = cleanQuery(artist);
+                const cleanedTitle = cleanQuery(title);
+                const query = encodeURIComponent(`${cleanedArtist} ${cleanedTitle}`);
+                
+                const res = await fetch(`https://itunes.apple.com/search?term=${query}&entity=song&limit=1`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.results && data.results.length > 0) {
+                        return data.results[0].artworkUrl100.replace('100x100bb', '600x600bb');
+                    }
+                }
+            } catch (e) {}
+            return '';
         }
 
         // 큐레이션 데이터베이스
@@ -486,11 +479,11 @@
             const dataObj = { kr100: [], us100: [], chill: [], focus: [], energy: [], night: [] };
 
             dataObj.chill = [
-                { title: "한 페이지가 될 수 있게", artist: "DAY6 (데이식스)", desc: "청량하고 에너제틱한 데이식스 대표 K-POP 록 앤 팝 트랙." },
-                { title: "예뻤어", artist: "DAY6 (데이식스)", desc: "아련함과 울림을 전하는 감성 K-POP 대표곡." },
-                { title: "Welcome to the Show", artist: "DAY6 (데이식스)", desc: "벅차오르는 가창력과 웅장한 사운드의 K-POP 트랙." },
-                { title: "Love wins all", artist: "아이유 (IU)", desc: "깊은 감동과 따뜻한 메시지를 전하는 아이유의 발라드." },
-                { title: "밤편지", artist: "아이유 (IU)", desc: "서정적인 어쿠스틱 서사로 마음을 울리는 명곡." },
+                { title: "한 페이지가 될 수 있게", artist: "DAY6", desc: "청량하고 에너제틱한 데이식스 대표 K-POP 록 앤 팝 트랙." },
+                { title: "예뻤어", artist: "DAY6", desc: "아련함과 울림을 전하는 감성 K-POP 대표곡." },
+                { title: "Welcome to the Show", artist: "DAY6", desc: "벅차오르는 가창력과 웅장한 사운드의 K-POP 트랙." },
+                { title: "Love wins all", artist: "아이유", desc: "깊은 감동과 따뜻한 메시지를 전하는 아이유의 발라드." },
+                { title: "밤편지", artist: "아이유", desc: "서정적인 어쿠스틱 서사로 마음을 울리는 명곡." },
                 { title: "Hype Boy", artist: "NewJeans", desc: "트렌디하고 청량한 감성의 K-POP 대표 인기곡." },
                 { title: "Ditto", artist: "NewJeans", desc: "몽환적이면서 아련한 볼티모어 클럽 리듬의 K-POP." },
                 { title: "Supernova", artist: "aespa", desc: "독창적인 신스 사운드와 미니멀한 비트가 돋보이는 K-POP." },
@@ -530,46 +523,34 @@
 
         const musicData = buildCuratedDatabase();
 
-        // JSONP 방식의 애플뮤직 탑 100 연동 (CORS 차단 방지)
-        function fetchRealtimeTop100JSONP(countryCode, targetMoodKey) {
-            return new Promise((resolve) => {
-                const callbackName = 'jp_cb_' + countryCode + '_' + Math.floor(Math.random() * 100000);
-                const script = document.createElement('script');
+        // 100% 안정적인 Apple 공식 Marketing RSS Feed API 연동 (CORS 제한 없음)
+        async function fetchRealtimeTop100(countryCode, targetMoodKey) {
+            try {
+                const res = await fetch(`https://rss.applemarketingtools.com/api/v2/${countryCode}/music/most-played/100/songs.json`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.feed && data.feed.results) {
+                        const songs = data.feed.results.map((item, idx) => ({
+                            title: item.name || '곡 제목',
+                            artist: item.artistName || '아티스트',
+                            coverArt: item.artworkUrl100 ? item.artworkUrl100.replace('{w}x{h}', '600x600').replace('100x100bb', '600x600bb') : '',
+                            desc: `실시간 ${countryCode.toUpperCase()} Apple Music TOP 100 공식 ${idx + 1}위 곡입니다.`
+                        }));
 
-                window[callbackName] = function(data) {
-                    try {
-                        if (data && data.feed && data.feed.entry) {
-                            const songs = data.feed.entry.map(item => ({
-                                title: item['im:name'] ? item['im:name'].label : '곡 제목',
-                                artist: item['im:artist'] ? item['im:artist'].label : '아티스트',
-                                coverArt: item['im:image'] && item['im:image'][2] ? item['im:image'][2].label.replace(/\/\d+x\d+bb\./, '/600x600bb.') : '',
-                                desc: `실시간 ${countryCode.toUpperCase()} Apple Music TOP 100 공식 히트곡.`
-                            }));
-                            if (songs.length > 0) {
-                                musicData[targetMoodKey] = songs;
-                            }
+                        if (songs.length > 0) {
+                            musicData[targetMoodKey] = songs;
                         }
-                    } catch (e) { console.warn(e); }
-                    delete window[callbackName];
-                    if (script.parentNode) script.parentNode.removeChild(script);
-                    resolve();
-                };
-
-                script.onerror = function() {
-                    delete window[callbackName];
-                    if (script.parentNode) script.parentNode.removeChild(script);
-                    resolve();
-                };
-
-                script.src = `https://itunes.apple.com/${countryCode}/rss/topsongs/limit=100/json?callback=${callbackName}`;
-                document.body.appendChild(script);
-            });
+                    }
+                }
+            } catch (e) {
+                console.warn(`${countryCode} 실시간 차트 불러오기 예외:`, e);
+            }
         }
 
         async function initRealtimeCharts() {
             await Promise.all([
-                fetchRealtimeTop100JSONP('kr', 'kr100'),
-                fetchRealtimeTop100JSONP('us', 'us100')
+                fetchRealtimeTop100('kr', 'kr100'),
+                fetchRealtimeTop100('us', 'us100')
             ]);
 
             if (musicData[currentMood] && musicData[currentMood].length > 0) {
@@ -689,9 +670,9 @@
         async function selectSong(song) {
             if (!song) return;
 
-            // 표지가 비어있는 경우 JSONP로 검색해 600x600 아트워크 자동 매칭
+            // 표지 주소가 비어있는 경우 정제된 검색어로 iTunes 아트워크 자동 조회
             if (!song.coverArt) {
-                song.coverArt = await fetchSongArtJSONP(song.title, song.artist);
+                song.coverArt = await fetchSongArt(song.title, song.artist);
             }
 
             currentSong = song;
